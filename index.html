@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NVD CARD</title>
+<meta name="description" content="Clube de descontos em restaurantes e empresas parceiras.">
+<meta name="theme-color" content="#0a0f1f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<script>
+// tema definido antes do primeiro paint pra tela não piscar na cor errada
+(function(){try{var t=localStorage.getItem('nvd.tema');if(t!=='light'&&t!=='dark'){t=window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.dataset.theme=t;var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='light'?'#f3f5fb':'#0a0f1f'}catch(e){document.documentElement.dataset.theme='dark'}})();
+</script>
+<style>
+:root{
+  --bg:#0a0f1f;--s1:#111832;--s2:#182043;--s3:#212b56;
+  --text:#eef1fb;--muted:#a3abc8;--muted2:#737c9e;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.16);
+  --gold:#e9b95b;--gold2:#f7d68e;--goldtext:#e9b95b;--on-gold:#1b1300;
+  --green:#2fd08a;--red:#ff6473;--amber:#ffb84d;--blue:#6ea8ff;
+  --shadow:0 10px 30px rgba(0,0,0,.35);--radius:16px;--nav-h:62px;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#f3f5fb;--s1:#ffffff;--s2:#eef1f9;--s3:#e2e7f4;
+  --text:#141a33;--muted:#535d7c;--muted2:#7f88a6;
+  --border:rgba(20,26,51,.10);--border2:rgba(20,26,51,.18);
+  --gold:#c48a10;--gold2:#e0a52b;--goldtext:#94650a;
+  --green:#0c9a5e;--red:#d63a4b;--amber:#a86300;--blue:#2c6fdc;
+  --shadow:0 8px 24px rgba(20,26,51,.10);
+  color-scheme:light;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body.noscroll{overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--text)}
+a{color:var(--goldtext)}
+h1,h2,h3{line-height:1.2}
+small{color:var(--muted);font-size:.8125rem}
+.muted{color:var(--muted)}
+.grow{flex:1;min-width:0}
+:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+.ic{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* ===== estrutura ===== */
+.app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--nav-h) + 28px + env(safe-area-inset-bottom))}
+body[data-role=admin] .app{max-width:1080px;padding-bottom:48px}
+.top{position:sticky;top:0;z-index:15;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:var(--bg);background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.06em}
+.mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--gold2),var(--gold));display:grid;place-items:center;color:var(--on-gold);font-weight:900;font-size:.95rem}
+.ib{background:var(--s2);color:var(--text);border:1px solid var(--border);width:40px;height:40px;border-radius:12px;display:inline-grid;place-items:center;flex:none}
+.ib:hover{border-color:var(--border2)}
+.view{padding:16px}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h2{font-size:1.15rem;margin-bottom:4px}
+.card h3{font-size:.95rem;margin-bottom:10px}
+.stack>*+*{margin-top:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.head h2{font-size:1.2rem}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--s1);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom)}
+.tabbar-in{max-width:520px;margin:0 auto;display:flex}
+.tab{flex:1;background:none;border:0;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.7rem;font-weight:600;color:var(--muted2)}
+.tab.on{color:var(--goldtext)}
+.atabs{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none}
+.atabs::-webkit-scrollbar{display:none}
+.atab{flex:none;display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:var(--s1);border:1px solid var(--border);color:var(--muted);font-weight:600;font-size:.88rem}
+.atab.on{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.atab .n{background:var(--red);color:#fff;border-radius:99px;font-size:.68rem;padding:1px 7px;font-weight:800}
+
+/* ===== listas ===== */
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--s1);border:1px solid var(--border);border-radius:14px;text-align:left;width:100%}
+button.row{cursor:pointer}
+button.row:hover{border-color:var(--border2)}
+.row b{display:block;font-weight:700;overflow-wrap:anywhere}
+.row small{display:block;overflow-wrap:anywhere}
+.row .end{margin-left:auto;text-align:right;flex:none}
+.logo{width:46px;height:46px;border-radius:13px;background:var(--s3);color:var(--goldtext);display:grid;place-items:center;font-weight:800;flex:none;overflow:hidden}
+.logo img{width:100%;height:100%;object-fit:cover}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:rgba(233,185,91,.14);color:var(--goldtext);font-size:.72rem;font-weight:800}
+.fchips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.fchips::-webkit-scrollbar{display:none}
+.fchip{flex:none;padding:7px 13px;border-radius:999px;background:var(--s1);border:1px solid var(--border);color:var(--muted);font-size:.82rem;font-weight:600}
+.fchip.on{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:.7rem;font-weight:800;letter-spacing:.06em;white-space:nowrap}
+.pill.ok{background:rgba(47,208,138,.16);color:var(--green)}
+.pill.bad{background:rgba(255,100,115,.16);color:var(--red)}
+.pill.warn{background:rgba(255,184,77,.18);color:var(--amber)}
+.pill.info{background:rgba(110,168,255,.16);color:var(--blue)}
+.pill.mut{background:var(--s3);color:var(--muted)}
+.empty{text-align:center;padding:36px 16px;color:var(--muted)}
+.empty .ic{width:34px;height:34px;margin-bottom:10px;color:var(--muted2)}
+.banner{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;margin-bottom:14px;font-size:.88rem;width:100%;text-align:left;border:1px solid transparent}
+.banner.warn{background:rgba(255,184,77,.13);color:var(--amber);border-color:rgba(255,184,77,.3)}
+.banner.info{background:rgba(110,168,255,.12);color:var(--blue);border-color:rgba(110,168,255,.3)}
+.banner.bad{background:rgba(255,100,115,.12);color:var(--red);border-color:rgba(255,100,115,.3)}
+.banner.ok{background:rgba(47,208,138,.12);color:var(--green);border-color:rgba(47,208,138,.3)}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+@media(min-width:700px){.kpis{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.kpi small{display:block}
+.kpi b{display:block;font-size:1.6rem;font-weight:800;margin-top:2px}
+.kpi.hot b{color:var(--amber)}
+.skl{height:180px;border-radius:var(--radius);background:linear-gradient(90deg,var(--s1),var(--s2),var(--s1));background-size:200% 100%;animation:skl 1.2s linear infinite}
+@keyframes skl{to{background-position:-200% 0}}
+
+/* ===== formulários e botões ===== */
+.field label{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:6px}
+.field small{display:block;margin-top:5px}
+.field input,.field select,.field textarea{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:12px;padding:12px 14px;font-size:16px;color:var(--text)}
+.field textarea{resize:vertical;min-height:80px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(233,185,91,.2)}
+.field.chk{display:flex;gap:10px;align-items:flex-start}
+.field.chk input{width:20px;height:20px;margin-top:2px;flex:none;accent-color:var(--gold)}
+.field.chk label{margin:0;font-weight:500;color:var(--muted);font-size:.82rem}
+.btn{appearance:none;border:0;border-radius:14px;padding:12px 18px;font-weight:800;background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--on-gold);display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;text-decoration:none;text-align:center}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.sec{background:var(--s2);color:var(--text);border:1px solid var(--border2)}
+.btn.danger{background:rgba(255,100,115,.14);color:var(--red);border:1px solid rgba(255,100,115,.35)}
+.btn.ok{background:linear-gradient(135deg,#46e2a0,var(--green));color:#04150d}
+.btn.sm{min-height:36px;padding:7px 12px;font-size:.82rem;border-radius:11px}
+.btn.big{min-height:64px;font-size:1.05rem;border-radius:18px}
+.btn.block{display:flex;width:100%}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:4px;margin-bottom:18px}
+.seg button{background:none;border:0;border-radius:11px;padding:10px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--s1);color:var(--text);box-shadow:var(--shadow)}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted2);font-size:.78rem;margin:16px 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--border)}
+.kv{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.kv span{color:var(--muted);font-size:.82rem;flex:none}
+.kv b{margin-left:auto;text-align:right;overflow-wrap:anywhere}
+.steps{padding-left:20px;color:var(--muted);font-size:.9rem}
+.steps li{margin-bottom:6px}
+
+/* ===== carteirinha ===== */
+.wallet{position:relative;border-radius:24px;padding:20px 20px 16px;color:#f2f4ff;background:linear-gradient(135deg,#1d2b63 0%,#0c1232 58%,#2c2054 100%);border:1px solid rgba(233,185,91,.38);box-shadow:0 18px 40px rgba(6,10,30,.45);overflow:hidden;margin-bottom:14px}
+.wallet::before{content:"";position:absolute;right:-70px;top:-70px;width:240px;height:240px;border-radius:50%;background:radial-gradient(closest-side,rgba(247,214,142,.30),transparent);pointer-events:none}
+.wallet.off{filter:saturate(.5)}
+.w-top{display:flex;align-items:center;justify-content:space-between;position:relative}
+.w-brand{font-weight:900;letter-spacing:.24em;color:#f7d68e;font-size:.9rem}
+.w-name{font-size:1.25rem;font-weight:800;margin-top:18px;position:relative;overflow-wrap:anywhere}
+.w-code{margin-top:6px;display:flex;flex-direction:column;position:relative}
+.w-code small{color:#9aa6d6;letter-spacing:.16em;font-size:.65rem}
+.w-code b{font-size:1.05rem;letter-spacing:.14em;font-variant-numeric:tabular-nums}
+.qr-box{margin:16px auto 10px;width:min(64vw,236px);background:#fff;border-radius:18px;padding:10px;position:relative}
+.qr-box svg{display:block;width:100%;height:auto}
+.qr-off{color:#0c1232;font-size:.8rem;text-align:center;padding:36px 8px}
+.pin-row{display:flex;justify-content:center;align-items:baseline;gap:10px;margin-top:6px;position:relative}
+.pin-row span{color:#9aa6d6;font-size:.7rem;letter-spacing:.16em}
+.pin-row b{font-size:1.55rem;letter-spacing:.18em;font-variant-numeric:tabular-nums}
+.timer{height:5px;border-radius:99px;background:rgba(255,255,255,.14);margin:12px auto 0;max-width:236px;overflow:hidden;position:relative}
+.timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#e9b95b,#f7d68e);border-radius:99px;transition:width 1s linear}
+.w-hint{text-align:center;color:#b6bfe6;font-size:.78rem;margin-top:10px;position:relative}
+.w-foot{margin-top:14px;color:#b6bfe6;font-size:.8rem;text-align:center;position:relative}
+.lock{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:22px 8px 8px;position:relative}
+.lock .ic{width:34px;height:34px;color:#f7d68e}
+.lock p{color:#b6bfe6;font-size:.88rem;margin-bottom:8px}
+.plan{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px;border-radius:14px;background:var(--s2);border:1px solid var(--border2);margin-bottom:10px}
+.plan:hover{border-color:var(--gold)}
+.plan .pp{margin-left:auto;text-align:right}
+.plan .pp strong{font-size:1.15rem;display:block}
+.pay-amt{text-align:center;padding:8px 0 14px}
+.pay-amt strong{font-size:2rem;display:block}
+
+/* ===== resultado da validação (parceiro) ===== */
+.res{border-width:2px}
+.res.ok{border-color:var(--green)}
+.res.bad{border-color:var(--red)}
+.res-h{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.res-i{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;flex:none}
+.res-i .ic{width:28px;height:28px;stroke-width:2.6}
+.res.ok .res-i{background:rgba(47,208,138,.18);color:var(--green)}
+.res.bad .res-i{background:rgba(255,100,115,.18);color:var(--red)}
+.opt{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--border2);border-radius:14px;margin-bottom:8px;cursor:pointer;background:var(--s2)}
+.opt input{margin-top:3px;width:20px;height:20px;accent-color:var(--gold);flex:none}
+.opt.off{opacity:.5;cursor:default}
+.opt:has(input:checked){border-color:var(--gold);background:rgba(233,185,91,.1)}
+
+/* ===== sheet / toast / scanner ===== */
+.sheet-bg{position:fixed;inset:0;background:rgba(3,6,18,.62);display:flex;align-items:flex-end;justify-content:center;z-index:50;animation:fade .15s}
+.sheet{background:var(--s1);width:100%;max-width:560px;max-height:92vh;max-height:92dvh;border-radius:22px 22px 0 0;display:flex;flex-direction:column;border:1px solid var(--border2);animation:up .2s ease-out}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 18px 10px}
+.sheet-h b{flex:1;font-size:1.05rem}
+.sheet-b{overflow:auto;padding:6px 18px calc(22px + env(safe-area-inset-bottom))}
+@media(min-width:700px){.sheet-bg{align-items:center}.sheet{border-radius:22px}}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(24px);opacity:.4}}
+#toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 18px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--s3);color:var(--text);border:1px solid var(--border2);padding:11px 16px;border-radius:14px;font-size:.88rem;font-weight:600;max-width:calc(100vw - 32px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:90;box-shadow:var(--shadow)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.erro{background:#3a1520;color:#ffb3bc;border-color:rgba(255,100,115,.5)}
+#toast.ok{background:#0f2e22;color:#9df0c8;border-color:rgba(47,208,138,.5)}
+.scan{position:fixed;inset:0;background:#000;z-index:80;display:flex;flex-direction:column}
+.scan video{flex:1;width:100%;min-height:0;object-fit:cover}
+.scan .frame{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.scan .frame i{width:min(68vw,320px);aspect-ratio:1;border:3px solid #f7d68e;border-radius:26px;box-shadow:0 0 0 100vmax rgba(0,0,0,.58)}
+.scan .bar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top)) 16px;color:#fff}
+.scan .msg{position:absolute;left:0;right:0;bottom:0;padding:18px 16px calc(24px + env(safe-area-inset-bottom));text-align:center;color:#fff;font-weight:600}
+
+/* ===== login ===== */
+.auth{max-width:420px;margin:0 auto;padding:calc(36px + env(safe-area-inset-top)) 20px 40px}
+.auth-brand{text-align:center;margin-bottom:26px}
+.auth-brand .mark{width:64px;height:64px;border-radius:20px;font-size:1.7rem;margin:0 auto 14px}
+.auth-brand h1{font-size:1.7rem;letter-spacing:.14em}
+.auth-brand p{color:var(--muted);margin-top:8px;font-size:.95rem}
+.err{color:var(--red);font-size:.88rem;margin-top:12px;min-height:1.2em;text-align:center}
+.auth .stack{margin-top:0}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></symbol>
+<symbol id="i-store" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/><line x1="7" y1="12" x2="17" y2="12"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></symbol>
+<symbol id="i-dollar" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+<symbol id="i-insta" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+<symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
+</defs></svg>
+
+<div id="app"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript><p style="padding:24px;text-align:center">Ative o JavaScript para usar o NVD CARD.</p></noscript>
+
+<!-- biblioteca de QR com integridade fixada; o service worker guarda uma cópia pra carteirinha abrir sem sinal -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha512-ZDSPMa/JM1D+7kdg2x3BsruQ6T/JpJo3jWDWkCZsP+5yVyp1KfESqLI+7RqB5k24F7p2cV7i2YHh/890y6P6Sw==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+<script>
+'use strict';
+/* =====================================================================
+   NVD CARD — app único (cliente, parceiro e admin).
+   Backend: schema isolado "nvd" no Supabase Portal Colab, acessado só por RPCs public.nvd_*.
+   Login próprio (não usa Supabase Auth): o navegador nunca recebe JWT do Portal.
+   ===================================================================== */
+const SB_URL='https://defwtvwmxntoliuwzjnf.supabase.co';
+const SB_KEY='sb_publishable_QukddDQPhm3R3XaUlxIY6w_7qleuNL8';
+const VERSAO='1.0.0';
+const TZ='America/Sao_Paulo';
+
+/* ---------- utilitários ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+// todo texto vindo do banco passa por aqui antes de virar HTML (nome de cliente é digitado por qualquer pessoa)
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const ic=(n,c='')=>`<svg class="ic ${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const brl=c=>((c||0)/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const dt=i=>i?new Date(i).toLocaleDateString('pt-BR',{timeZone:TZ}):'—';
+const dth=i=>i?new Date(i).toLocaleString('pt-BR',{timeZone:TZ,day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+const ha=i=>{const s=(Date.now()-new Date(i))/1000;if(s<60)return 'agora';if(s<3600)return `há ${Math.floor(s/60)} min`;if(s<86400)return `há ${Math.floor(s/3600)} h`;return `há ${Math.floor(s/86400)} d`};
+const ini=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(p=>p[0]||'').join('').toUpperCase();
+const fmtCod=c=>c?String(c).slice(0,4)+'-'+String(c).slice(4):'';
+const seguraUrl=u=>/^https?:\/\/[^\s"'<>]+$/i.test(u||'')?u:'';
+const periodoTxt=d=>d===30?'por mês':d===365?'por ano':d===90?'por trimestre':d===180?'por semestre':`por ${d} dias`;
+const LIMITE_TXT={dia:'por dia',semana:'por semana',mes:'por mês',sempre:'no total'};
+const TIPOS_BENEF=[['2x1','2 por 1'],['percentual','Desconto em %'],['valor_fixo','Desconto em R$'],['brinde','Brinde'],['outro','Outro']];
+function resumoBenef(b){
+  const v=b.valor!=null?Number(b.valor):null,f=n=>n.toLocaleString('pt-BR',{maximumFractionDigits:2});
+  if(b.tipo==='2x1')return '2x1';
+  if(b.tipo==='percentual'&&v!=null)return f(v)+'% OFF';
+  if(b.tipo==='valor_fixo'&&v!=null)return 'R$ '+f(v)+' OFF';
+  if(b.tipo==='brinde')return 'Brinde';
+  return b.titulo.length>22?b.titulo.slice(0,21)+'…':b.titulo;
+}
+// o navegador bloqueia vibrate antes do primeiro toque; sem essa checagem ele só polui o console
+const vibrar=p=>{try{if(navigator.vibrate&&(!navigator.userActivation||navigator.userActivation.hasBeenActive))navigator.vibrate(p)}catch(e){}};
+const skl=()=>'<div class="skl"></div>';
+const vazio=(icone,msg)=>`<div class="empty">${ic(icone)}<p>${msg}</p></div>`;
+function copiar(txt){
+  const fim=()=>toast('Copiado!','ok');
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(fim,()=>toast('Não foi possível copiar.','erro'));return}
+  const t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();
+  try{document.execCommand('copy');fim()}catch(e){toast('Não foi possível copiar.','erro')}t.remove();
+}
+let toastT;
+function toast(msg,tipo=''){const t=$('#toast');t.textContent=msg;t.className='show '+tipo;clearTimeout(toastT);toastT=setTimeout(()=>{t.className=''},3400)}
+function alternarTema(){
+  const t=document.documentElement.dataset.theme==='light'?'dark':'light';
+  document.documentElement.dataset.theme=t;store.set('nvd.tema',t);
+  const m=$('meta[name=theme-color]');if(m)m.content=t==='light'?'#f3f5fb':'#0a0f1f';
+}
+
+/* ---------- campos de formulário ---------- */
+const fld=(id,label,v='',o={})=>`<div class="field"><label for="${id}">${label}</label>${o.area
+  ?`<textarea id="${id}" rows="${o.rows||3}" ${o.max?`maxlength="${o.max}"`:''} placeholder="${esc(o.ph||'')}">${esc(v)}</textarea>`
+  :`<input id="${id}" type="${o.type||'text'}" value="${esc(v)}" placeholder="${esc(o.ph||'')}" ${o.max?`maxlength="${o.max}"`:''} ${o.mode?`inputmode="${o.mode}"`:''} ${o.auto?`autocomplete="${o.auto}"`:''} ${o.list?`list="${o.list}"`:''} ${o.req?'required':''}>`}${o.hint?`<small>${o.hint}</small>`:''}</div>`;
+const sel=(id,label,opts,cur)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${opts.map(([v,t])=>`<option value="${esc(v)}" ${String(v)===String(cur)?'selected':''}>${esc(t)}</option>`).join('')}</select></div>`;
+const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+const parseValor=s=>{const t=String(s||'').trim().replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.');if(t==='')return null;const n=Number(t);return isFinite(n)?n:NaN};
+
+/* ---------- API ---------- */
+const S={token:null,papel:null,user:null,parceiro:null,config:{},tab:null,cart:null,offline:false};
+async function api(fn,args={},o={}){
+  let res;
+  try{res=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)})}
+  catch(e){const err=new Error('Sem conexão com a internet.');err.offline=true;throw err}
+  let data=null;try{data=await res.json()}catch(e){}
+  if(!res.ok){
+    if(res.status===401&&S.token&&!o.semLogout)sessaoExpirou();
+    const err=new Error((data&&data.message)||'Erro inesperado. Tente de novo.');err.status=res.status;throw err;
+  }
+  if(!o.raw&&data&&data.ok===false){const err=new Error(data.erro||'Não foi possível concluir.');err.dados=data;throw err}
+  return data;
+}
+const tk=(fn,args={},o)=>api(fn,{p_token:S.token,...args},o);
+
+/* ---------- ações e formulários (delegação de eventos: nenhum onclick inline com dado do banco) ---------- */
+const acoes={},forms={};
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el)return;
+  const f=acoes[el.dataset.act];if(!f)return;
+  Promise.resolve(f(el,e)).catch(err=>toast(err.message||'Erro inesperado.','erro'));
+});
+document.addEventListener('submit',e=>{
+  const f=e.target.closest('[data-form]');if(!f)return;
+  e.preventDefault();
+  const h=forms[f.dataset.form];if(!h)return;
+  const btn=f.querySelector('button[type=submit],button:not([type])');
+  if(btn){if(btn.disabled)return;btn.disabled=true}
+  Promise.resolve(h(f)).catch(err=>toast(err.message||'Erro inesperado.','erro')).finally(()=>{if(btn)btn.disabled=false});
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('.scan'))fecharScanner();else fecharSheet()}});
+
+/* ---------- sheet (janela deslizante) ---------- */
+function abrirSheet(html,titulo=''){
+  fecharSheet();
+  const bg=document.createElement('div');bg.className='sheet-bg';bg.id='sheet';
+  bg.innerHTML=`<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-h"><b>${esc(titulo)}</b><button type="button" class="ib" data-act="fechar" aria-label="Fechar">${ic('x')}</button></div><div class="sheet-b" id="sheetB">${html}</div></div>`;
+  bg.addEventListener('click',e=>{if(e.target===bg)fecharSheet()});
+  document.body.appendChild(bg);document.body.classList.add('noscroll');
+}
+function fecharSheet(){const s=$('#sheet');if(s)s.remove();document.body.classList.remove('noscroll')}
+const sheetCorpo=h=>{const b=$('#sheetB');if(b)b.innerHTML=h};
+acoes.fechar=()=>fecharSheet();
+acoes.copiar=el=>copiar(el.dataset.v);
+acoes.tema=()=>alternarTema();
+
+/* ---------- criptografia da carteirinha (mesma conta do servidor: HMAC-SHA256 por janela de 30 s) ---------- */
+const enc=new TextEncoder(),chaves=new Map();
+async function hmac(secret,msg){
+  if(!(window.crypto&&crypto.subtle))throw new Error('Abra o app por uma conexão segura (https).');
+  let k=chaves.get(secret);
+  if(!k){k=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);chaves.set(secret,k)}
+  return new Uint8Array(await crypto.subtle.sign('HMAC',k,enc.encode(msg)));
+}
+const hex=b=>[...b].map(x=>x.toString(16).padStart(2,'0')).join('');
+async function gerarToken(codigo,secret,janela){
+  const a=await hmac(secret,`q|${codigo}|${janela}`),p=await hmac(secret,`p|${codigo}|${janela}`);
+  const n=(((p[0]&127)<<24)|(p[1]<<16)|(p[2]<<8)|p[3])%1000000;
+  return {qr:`NVD1.${codigo}.${janela}.${hex(a).slice(0,16)}`,pin:String(n).padStart(6,'0')};
+}
+function qrSvg(texto){
+  const q=qrcode(0,'M');q.addData(texto);q.make();
+  const n=q.getModuleCount(),m=3;let d='';
+  for(let r=0;r<n;r++){let c=0;while(c<n){if(q.isDark(r,c)){const s=c;while(c<n&&q.isDark(r,c))c++;d+=`M${s} ${r}h${c-s}v1h-${c-s}z`}else c++}}
+  return `<svg viewBox="${-m} ${-m} ${n+2*m} ${n+2*m}" shape-rendering="crispEdges" role="img" aria-label="QR code da carteirinha"><rect x="${-m}" y="${-m}" width="${n+2*m}" height="${n+2*m}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+}
+
+/* ---------- sessão ---------- */
+function salvarSessao(){store.set('nvd.sessao',JSON.stringify({token:S.token}))}
+function limparSessao(){
+  pararQr();
+  S.token=null;S.papel=null;S.user=null;S.parceiro=null;S.cart=null;S.tab=null;S.offline=false;
+  ['nvd.sessao','nvd.cart','nvd.perfil'].forEach(k=>store.del(k));
+}
+function sessaoExpirou(){limparSessao();fecharSheet();renderAuth('Sua sessão expirou. Entre novamente.')}
+async function iniciarSessao(token){
+  S.token=token;salvarSessao();
+  const r=await tk('nvd_sessao',{},{semLogout:true});
+  aplicarPerfil(r);
+  store.set('nvd.perfil',JSON.stringify(r));
+  entrar();
+}
+function aplicarPerfil(r){S.user=r.usuario;S.papel=r.usuario.papel;S.parceiro=r.parceiro||null;S.config=r.config||{}}
+function entrar(){
+  document.body.dataset.role=S.papel;
+  if(S.papel==='membro')renderMembro();else if(S.papel==='parceiro')renderParceiro();else renderAdmin();
+}
+acoes.sair=async()=>{try{await tk('nvd_logout',{},{semLogout:true,raw:true})}catch(e){}limparSessao();renderAuth()};
+
+/* ---------- tela de entrada ---------- */
+function renderAuth(msg=''){
+  document.body.dataset.role='';
+  $('#app').innerHTML=`<div class="auth">
+    <div class="auth-brand"><div class="mark">N</div><h1>NVD CARD</h1><p>Seu clube de descontos em restaurantes e empresas parceiras.</p></div>
+    <div class="seg" role="tablist"><button type="button" data-act="auth-tab" data-t="entrar" class="on">Entrar</button><button type="button" data-act="auth-tab" data-t="criar">Criar conta</button></div>
+    <form data-form="login" class="stack" id="fLogin" autocomplete="on">
+      ${fld('lEmail','E-mail','',{type:'email',auto:'username',mode:'email',req:1})}
+      ${fld('lSenha','Senha','',{type:'password',auto:'current-password',req:1})}
+      <button class="btn block" type="submit">Entrar</button>
+    </form>
+    <form data-form="cadastro" class="stack" id="fCad" hidden autocomplete="on">
+      ${fld('cNome','Nome completo','',{auto:'name',max:80,req:1})}
+      ${fld('cEmail','E-mail','',{type:'email',auto:'email',mode:'email',req:1})}
+      ${fld('cTel','WhatsApp (opcional)','',{type:'tel',auto:'tel',mode:'tel',max:20})}
+      ${fld('cSenha','Crie uma senha','',{type:'password',auto:'new-password',hint:'Mínimo de 8 caracteres.',req:1})}
+      <div class="field chk"><input type="checkbox" id="cAceite" required><label for="cAceite">Concordo em compartilhar meu nome e contato com o NVD CARD para operar minha carteirinha, e que o estabelecimento veja meu nome ao validar um benefício.</label></div>
+      <button class="btn block" type="submit">Criar minha conta</button>
+    </form>
+    <p class="err" id="authErr" role="alert">${esc(msg)}</p>
+  </div>`;
+}
+const authErro=m=>{const e=$('#authErr');if(e)e.textContent=m||''};
+acoes['auth-tab']=el=>{
+  const criar=el.dataset.t==='criar';
+  $$('.seg button').forEach(b=>b.classList.toggle('on',b===el));
+  $('#fLogin').hidden=criar;$('#fCad').hidden=!criar;authErro('');
+};
+forms.login=async f=>{
+  authErro('');
+  try{const r=await api('nvd_login',{p_email:val('lEmail'),p_senha:$('#lSenha').value},{semLogout:true});await iniciarSessao(r.token)}
+  catch(e){authErro(e.message)}
+};
+forms.cadastro=async f=>{
+  authErro('');
+  try{const r=await api('nvd_cadastrar',{p_nome:val('cNome'),p_email:val('cEmail'),p_senha:$('#cSenha').value,p_telefone:val('cTel')},{semLogout:true});await iniciarSessao(r.token)}
+  catch(e){authErro(e.message)}
+};
+
+/* ---------- conta (comum aos três perfis) ---------- */
+function viewConta(extra=''){
+  const u=S.user;
+  return `<section class="card"><h2>Minha conta</h2><p class="muted">${esc(u.email)}</p>
+    <form data-form="perfil" class="stack" style="margin-top:12px">
+      ${fld('pNome','Nome',u.nome,{max:80,auto:'name'})}
+      ${u.papel==='membro'?fld('pTel','WhatsApp',u.telefone,{type:'tel',mode:'tel',max:20,auto:'tel'}):''}
+      <button class="btn sec block" type="submit">Salvar</button>
+    </form></section>
+    ${extra}
+    <section class="card"><h3>Trocar senha</h3>
+    <form data-form="senha" class="stack">
+      ${fld('sAtual','Senha atual','',{type:'password',auto:'current-password'})}
+      ${fld('sNova','Nova senha','',{type:'password',auto:'new-password',hint:'Mínimo de 8 caracteres.'})}
+      <button class="btn sec block" type="submit">Atualizar senha</button>
+    </form></section>
+    <section class="card stack">
+      <button type="button" class="btn sec block" data-act="tema">${ic('sun')} Alternar tema claro/escuro</button>
+      ${S.config.whatsapp?`<a class="btn sec block" target="_blank" rel="noopener" href="https://wa.me/${esc(S.config.whatsapp)}">${ic('chat')} Falar com o suporte</a>`:''}
+      <button type="button" class="btn danger block" data-act="sair">${ic('logout')} Sair da conta</button>
+      <p class="muted" style="text-align:center;font-size:.75rem">NVD CARD v${VERSAO}</p>
+    </section>`;
+}
+forms.perfil=async f=>{
+  await tk('nvd_atualizar_perfil',{p_nome:val('pNome'),p_telefone:document.getElementById('pTel')?val('pTel'):''});
+  S.user.nome=val('pNome');if(document.getElementById('pTel'))S.user.telefone=val('pTel');
+  toast('Dados atualizados.','ok');
+};
+forms.senha=async f=>{
+  await tk('nvd_trocar_senha',{p_atual:$('#sAtual').value,p_nova:$('#sNova').value});
+  f.reset();toast('Senha atualizada.','ok');
+};
+const marca=(sub='')=>`<div class="brand"><div class="mark">N</div><div>NVD CARD${sub?`<small style="display:block;font-weight:600;letter-spacing:0">${esc(sub)}</small>`:''}</div></div>`;
+const erroView=(v,e)=>{v.innerHTML=`<div class="empty">${ic('alert')}<p>${esc(e.message||'Não foi possível carregar.')}</p><p style="margin-top:14px"><button type="button" class="btn sec" data-act="recarregar">${ic('refresh')} Tentar de novo</button></p></div>`};
+acoes.recarregar=()=>irTab(S.tab);
+
+/* =====================================================================
+   CLIENTE
+   ===================================================================== */
+const MEMBRO_TABS=[['cart','Carteirinha','card'],['parceiros','Parceiros','store'],['hist','Histórico','clock'],['conta','Conta','user']];
+function renderMembro(){
+  $('#app').innerHTML=`<div class="app"><header class="top">${marca()}<div class="grow"></div><button type="button" class="ib" data-act="tema" aria-label="Alternar tema">${ic('sun')}</button></header><main class="view" id="view"></main></div>
+  <nav class="tabbar"><div class="tabbar-in">${MEMBRO_TABS.map(([k,t,i])=>`<button type="button" class="tab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span></button>`).join('')}</div></nav>`;
+  irTab(S.tab&&MEMBRO_TABS.some(t=>t[0]===S.tab)?S.tab:'cart');
+}
+function irTab(t){
+  S.tab=t;pararQr();
+  $$('.tabbar .tab,.atab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  window.scrollTo(0,0);
+  const mapa=S.papel==='membro'?tabsMembro:S.papel==='parceiro'?tabsParceiro:tabsAdmin;
+  if(mapa[t])mapa[t]();
+}
+acoes.tab=el=>irTab(el.dataset.t);
+const tabsMembro={};
+
+/* --- carteirinha --- */
+async function carregarCart(){
+  const t0=Date.now(),r=await tk('nvd_membro_carteirinha');
+  // offset entre o relógio do aparelho e o do servidor: o QR usa a hora do servidor, então relógio errado não quebra
+  S.cart={...r,offsetMs:r.agora_ms-(t0+Date.now())/2};
+  store.set('nvd.cart',JSON.stringify(S.cart));
+}
+const cartAtiva=c=>!!(c&&!c.bloqueado&&c.valido_ate&&new Date(c.valido_ate).getTime()>Date.now()+c.offsetMs);
+tabsMembro.cart=async()=>{
+  const v=$('#view');
+  if(!S.cart){try{S.cart=JSON.parse(store.get('nvd.cart')||'null')}catch(e){}}
+  if(!S.cart)v.innerHTML=skl();
+  try{await carregarCart();S.offline=false}
+  catch(e){if(!e.offline||!S.cart)return erroView(v,e);S.offline=true}
+  if(S.tab==='cart')desenharCart();
+};
+function desenharCart(){
+  const c=S.cart,v=$('#view'),ativa=cartAtiva(c);
+  const st=c.bloqueado?['bad','BLOQUEADA']:ativa?['ok','ATIVA']:['warn',c.valido_ate?'VENCIDA':'INATIVA'];
+  v.innerHTML=`${S.offline?`<div class="banner warn">${ic('alert')}<span>Sem conexão. A carteirinha continua funcionando, mas o status pode estar desatualizado.</span></div>`:''}
+  ${c.pendente?`<button type="button" class="banner info" data-act="ver-pgto">${ic('clock')}<span class="grow">Pagamento ${esc(c.pendente.referencia)} ${c.pendente.informado_em?'informado. Aguardando confirmação.':'pendente. Toque para ver como pagar.'}</span>${ic('chevron')}</button>`:''}
+  <section class="wallet ${ativa?'':'off'}">
+    <div class="w-top"><span class="w-brand">NVD CARD</span><span class="pill ${st[0]}">${st[1]}</span></div>
+    <div class="w-name">${esc(c.nome)}</div>
+    <div class="w-code"><small>CÓDIGO</small><b>${esc(fmtCod(c.codigo))}</b></div>
+    ${ativa?`<div class="qr-box"><div id="qr"><div class="qr-off">Gerando…</div></div></div>
+      <div class="pin-row"><span>PIN</span><b id="pin">••• •••</b></div>
+      <div class="timer"><i id="tbar"></i></div>
+      <p class="w-hint">Mostre ao atendente antes de pedir a conta. O código muda a cada 30 segundos.</p>`
+    :`<div class="lock">${ic('lock')}<b>${c.bloqueado?'Carteirinha bloqueada':'Carteirinha inativa'}</b>
+      <p>${c.bloqueado?'Fale com o suporte para regularizar.':'Escolha um plano para liberar seus benefícios nos parceiros.'}</p>
+      ${c.bloqueado?'':`<button type="button" class="btn" data-act="planos">Ativar carteirinha</button>`}</div>`}
+    <div class="w-foot">${ativa?`Válida até <b>${esc(dt(c.valido_ate))}</b>`:c.valido_ate?`Venceu em <b>${esc(dt(c.valido_ate))}</b>`:''}</div>
+  </section>
+  ${ativa?`<section class="card"><h3>Como usar</h3><ol class="steps"><li>Escolha um parceiro na aba <b>Parceiros</b>.</li><li>Antes de pedir a conta, abra esta tela e mostre o QR code ao atendente.</li><li>Ele confirma o benefício na hora. Sem cupom nem papel.</li></ol></section>`
+  :(!c.bloqueado&&c.valido_ate?`<button type="button" class="btn block" data-act="planos">Renovar carteirinha</button>`:'')}`;
+  if(ativa)iniciarQr();
+}
+function pararQr(){if(S.qrTimer){clearInterval(S.qrTimer);S.qrTimer=null}S.qrWin=null}
+function iniciarQr(){
+  pararQr();S.tickN=0;
+  const tick=async()=>{
+    const c=S.cart;if(!c)return;
+    if(!cartAtiva(c)){pararQr();return desenharCart()}
+    const agora=(Date.now()+c.offsetMs)/1000,win=Math.floor(agora/30);
+    if(win!==S.qrWin){
+      S.qrWin=win;
+      try{
+        const t=await gerarToken(c.codigo,c.qr_secret,win);
+        if(S.qrWin!==win||!$('#qr'))return;
+        $('#qr').innerHTML=typeof qrcode==='function'?qrSvg(t.qr):'<div class="qr-off">QR indisponível agora. Use o código e o PIN abaixo.</div>';
+        $('#pin').textContent=t.pin.slice(0,3)+' '+t.pin.slice(3);
+      }catch(e){if($('#qr'))$('#qr').innerHTML=`<div class="qr-off">${esc(e.message)}</div>`}
+    }
+    const b=$('#tbar');if(b)b.style.width=((30-(agora%30))/30*100)+'%';
+    // com pagamento pendente, confere a cada ~20 s se o admin já confirmou
+    if(c.pendente&&++S.tickN%20===0&&!S.offline)carregarCart().then(()=>{if(S.tab==='cart'&&cartAtiva(S.cart)!==cartAtiva(c))desenharCart()}).catch(()=>{});
+  };
+  tick();S.qrTimer=setInterval(tick,1000);
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.papel==='membro'&&S.tab==='cart'&&S.token)tabsMembro.cart()});
+
+/* --- planos e pagamento --- */
+acoes.planos=async()=>{
+  abrirSheet(skl(),'Escolha seu plano');
+  const planos=await api('nvd_planos_publicos');
+  if(!planos.length)return sheetCorpo(vazio('tag','Nenhum plano disponível no momento.'));
+  sheetCorpo(planos.map(p=>`<button type="button" class="plan" data-act="plano" data-id="${esc(p.id)}"><div><b>${esc(p.nome)}</b><small>${esc(p.descricao)}</small></div><div class="pp"><strong>${brl(p.preco_centavos)}</strong><small>${esc(periodoTxt(p.periodo_dias))}</small></div></button>`).join('')
+    +'<p class="muted" style="font-size:.82rem;margin-top:6px">O pagamento é feito por Pix. Assim que confirmarmos, a carteirinha é liberada.</p>');
+};
+async function mostrarPagamento(planoId){
+  const r=await tk('nvd_membro_criar_pagamento',{p_plano_id:planoId}),g=r.pagamento,px=r.pix||{};
+  if(!$('#sheet'))abrirSheet('','Pagamento');
+  sheetCorpo(`<div class="pay-amt"><small>${esc(g.plano_nome)}</small><strong>${brl(g.valor_centavos)}</strong></div>
+    ${px.pix_chave?`<div class="kv"><span>Chave Pix</span><b>${esc(px.pix_chave)}</b><button type="button" class="ib" data-act="copiar" data-v="${esc(px.pix_chave)}" aria-label="Copiar chave Pix">${ic('copy')}</button></div>
+      ${px.pix_favorecido?`<div class="kv"><span>Favorecido</span><b>${esc(px.pix_favorecido)}</b></div>`:''}`
+      :`<div class="banner warn">${ic('alert')}<span>A chave Pix ainda não foi configurada. Fale com o suporte para pagar.</span></div>`}
+    <div class="kv"><span>Identificador</span><b>${esc(g.referencia)}</b><button type="button" class="ib" data-act="copiar" data-v="${esc(g.referencia)}" aria-label="Copiar identificador">${ic('copy')}</button></div>
+    <p class="muted" style="font-size:.86rem;margin:14px 0">${esc(px.pix_instrucoes||'')}</p>
+    <div class="stack">
+      ${g.informado_em?`<div class="banner ok">${ic('check')}<span>Aviso enviado ${esc(ha(g.informado_em))}. Estamos conferindo o pagamento.</span></div>`
+        :`<button type="button" class="btn block" data-act="paguei" data-id="${esc(g.id)}">Já fiz o pagamento</button>`}
+      ${px.whatsapp?`<a class="btn sec block" target="_blank" rel="noopener" href="https://wa.me/${esc(px.whatsapp)}?text=${encodeURIComponent('Olá! Fiz o pagamento '+g.referencia+' do NVD CARD.')}">${ic('chat')} Enviar comprovante</a>`:''}
+    </div>`);
+}
+acoes.plano=el=>mostrarPagamento(el.dataset.id);
+acoes['ver-pgto']=()=>{abrirSheet(skl(),'Pagamento');return mostrarPagamento(S.cart.pendente.plano_id)};
+acoes.paguei=async el=>{
+  await tk('nvd_membro_informar_pagamento',{p_pagamento_id:el.dataset.id});
+  fecharSheet();toast('Aviso enviado! Liberamos assim que o pagamento for confirmado.','ok');
+  if(S.tab==='cart')tabsMembro.cart();
+};
+
+/* --- parceiros --- */
+S.pf={q:'',cat:''};
+tabsMembro.parceiros=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  try{S.parceiros=(await tk('nvd_membro_parceiros')).parceiros}catch(e){return erroView(v,e)}
+  if(!S.cart){try{S.cart=JSON.parse(store.get('nvd.cart')||'null')}catch(e){}}
+  const cats=[...new Set(S.parceiros.map(p=>p.categoria))].sort();
+  v.innerHTML=`<div class="field" style="margin-bottom:12px"><input id="pq" type="search" placeholder="Buscar restaurante, categoria ou cidade" value="${esc(S.pf.q)}" aria-label="Buscar parceiros"></div>
+    <div class="fchips" id="pcats"><button type="button" class="fchip ${S.pf.cat?'':'on'}" data-act="cat" data-v="">Todos</button>${cats.map(c=>`<button type="button" class="fchip ${S.pf.cat===c?'on':''}" data-act="cat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <div class="list" id="plist"></div>`;
+  listaParceiros();
+};
+function listaParceiros(){
+  const q=S.pf.q.trim().toLowerCase(),L=$('#plist');if(!L)return;
+  const r=S.parceiros.filter(p=>(!S.pf.cat||p.categoria===S.pf.cat)&&(!q||[p.nome,p.categoria,p.cidade,p.endereco].join(' ').toLowerCase().includes(q)));
+  L.innerHTML=r.length?r.map(p=>{const lg=seguraUrl(p.logo_url);return `<button type="button" class="row" data-act="parceiro" data-id="${esc(p.id)}">
+    <div class="logo">${lg?`<img src="${esc(lg)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:esc(ini(p.nome))}</div>
+    <div class="grow"><b>${esc(p.nome)}</b><small>${esc(p.categoria)}${p.cidade?' · '+esc(p.cidade):''}</small>
+      <div class="chips">${p.beneficios.slice(0,3).map(b=>`<span class="chip">${esc(resumoBenef(b))}</span>`).join('')}</div></div>${ic('chevron')}</button>`}).join('')
+    :vazio('search',S.parceiros.length?'Nenhum parceiro encontrado com esse filtro.':'Em breve novos parceiros por aqui.');
+}
+document.addEventListener('input',e=>{if(e.target.id==='pq'){S.pf.q=e.target.value;listaParceiros()}});
+acoes.cat=el=>{S.pf.cat=el.dataset.v;$$('#pcats .fchip').forEach(b=>b.classList.toggle('on',b===el));listaParceiros()};
+acoes.parceiro=el=>{
+  const p=S.parceiros.find(x=>x.id===el.dataset.id);if(!p)return;
+  const ativa=cartAtiva(S.cart),lg=seguraUrl(p.logo_url),ig=String(p.instagram||'').replace(/[^A-Za-z0-9._]/g,'');
+  abrirSheet(`<div class="row" style="border:0;padding:0 0 12px;background:none"><div class="logo">${lg?`<img src="${esc(lg)}" alt="" referrerpolicy="no-referrer">`:esc(ini(p.nome))}</div><div><b style="font-size:1.1rem">${esc(p.nome)}</b><small>${esc(p.categoria)}${p.cidade?' · '+esc(p.cidade):''}</small></div></div>
+    ${p.descricao?`<p class="muted" style="margin-bottom:14px">${esc(p.descricao)}</p>`:''}
+    <h3 style="margin-bottom:10px">Benefícios</h3>
+    ${p.beneficios.length?p.beneficios.map(b=>{const rest=b.usados==null?null:Math.max(b.limite_qtd-b.usados,0);
+      return `<div class="row" style="margin-bottom:8px;align-items:flex-start"><span class="chip">${esc(resumoBenef(b))}</span><div class="grow"><b>${esc(b.titulo)}</b>${b.regras?`<small>${esc(b.regras)}</small>`:''}
+      <small>${b.limite_qtd} uso${b.limite_qtd>1?'s':''} ${esc(LIMITE_TXT[b.limite_periodo])}${rest!=null&&ativa?` · <b style="display:inline;color:${rest?'var(--green)':'var(--red)'}">${rest?`restam ${rest}`:'limite atingido'}</b>`:''}</small></div></div>`}).join('')
+      :'<p class="muted">Nenhum benefício cadastrado ainda.</p>'}
+    <div class="stack" style="margin-top:14px">
+      ${p.endereco?`<a class="btn sec block" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco+' '+p.cidade)}">${ic('pin')} ${esc(p.endereco)}</a>`:''}
+      ${p.telefone?`<a class="btn sec block" href="tel:${esc(p.telefone.replace(/[^0-9+]/g,''))}">${ic('phone')} ${esc(p.telefone)}</a>`:''}
+      ${ig?`<a class="btn sec block" target="_blank" rel="noopener" href="https://instagram.com/${ig}">${ic('insta')} @${esc(ig)}</a>`:''}
+      ${ativa?`<button type="button" class="btn block" data-act="ir-cart">${ic('card')} Abrir minha carteirinha</button>`:`<button type="button" class="btn block" data-act="planos">Ative sua carteirinha para usar</button>`}
+    </div>`,p.nome);
+};
+acoes['ir-cart']=()=>{fecharSheet();irTab('cart')};
+
+/* --- histórico --- */
+tabsMembro.hist=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let h;try{h=await tk('nvd_membro_historico')}catch(e){return erroView(v,e)}
+  const ST={pendente:['warn','Pendente'],pago:['ok','Pago'],cancelado:['mut','Cancelado']};
+  v.innerHTML=`<div class="head"><h2>Meus usos</h2></div>
+    <div class="list" style="margin-bottom:22px">${h.usos.length?h.usos.map(u=>`<div class="row"><div class="grow"><b>${esc(u.parceiro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}</small></div>${u.estornado?'<span class="pill mut">Estornado</span>':''}</div>`).join(''):vazio('clock','Você ainda não usou nenhum benefício.')}</div>
+    <div class="head"><h2>Pagamentos</h2></div>
+    <div class="list">${h.pagamentos.length?h.pagamentos.map(g=>{const s=ST[g.status]||['mut',g.status];return `<div class="row"><div class="grow"><b>${esc(g.plano)}</b><small>${esc(g.referencia)} · ${esc(dt(g.criado_em))}</small></div><div class="end"><b>${brl(g.valor_centavos)}</b><span class="pill ${s[0]}">${s[1]}</span></div></div>`}).join(''):vazio('dollar','Nenhum pagamento ainda.')}</div>`;
+};
+tabsMembro.conta=()=>{$('#view').innerHTML=viewConta()};
+
+/* =====================================================================
+   PARCEIRO (atendente do restaurante ou empresa): confere a carteirinha e registra o uso
+   ===================================================================== */
+const PARC_TABS=[['val','Validar','scan'],['usos','Usos','list'],['conta','Conta','user']];
+const tabsParceiro={};
+function renderParceiro(){
+  $('#app').innerHTML=`<div class="app"><header class="top">${marca(S.parceiro?S.parceiro.nome:'')}<div class="grow"></div><button type="button" class="ib" data-act="tema" aria-label="Alternar tema">${ic('sun')}</button></header><main class="view" id="view"></main></div>
+  <nav class="tabbar"><div class="tabbar-in">${PARC_TABS.map(([k,t,i])=>`<button type="button" class="tab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span></button>`).join('')}</div></nav>`;
+  irTab(S.tab&&PARC_TABS.some(t=>t[0]===S.tab)?S.tab:'val');
+}
+tabsParceiro.val=()=>{
+  $('#view').innerHTML=`<section class="card"><h2>Validar carteirinha</h2><p class="muted" style="margin-bottom:14px">Peça ao cliente para abrir a carteirinha e escaneie o QR code.</p>
+    <button type="button" class="btn big block" data-act="scan">${ic('scan')} Escanear QR code</button>
+    <div class="or"><span>ou digite os dados da carteirinha</span></div>
+    <form data-form="manual" class="stack">
+      <div class="grid2">${fld('mCod','Código','',{ph:'K7M2-Q9X4',max:200,auto:'off'})}${fld('mPin','PIN','',{ph:'000 000',mode:'numeric',max:7,auto:'off'})}</div>
+      <button class="btn sec block" type="submit">${ic('keyboard')} Validar</button>
+    </form></section><div id="res"></div>`;
+};
+acoes['nova-val']=()=>tabsParceiro.val();
+forms.manual=async()=>{
+  const cod=val('mCod');
+  // aceita colar o texto inteiro do QR (NVD1....) no campo de código: útil no computador do caixa
+  if(/^NVD1\./i.test(cod))return validar({p_qr:cod});
+  return validar({p_codigo:cod,p_pin:val('mPin')});
+};
+async function validar(args){
+  if(!$('#res'))tabsParceiro.val();
+  const res=$('#res');res.innerHTML=skl();
+  try{
+    const r=await tk('nvd_parceiro_validar',args,{raw:true});
+    S.val=r;desenharResultado(r);
+    vibrar(r.ok?60:[120,60,120]);
+  }catch(e){res.innerHTML=`<div class="banner bad">${ic('alert')}<span>${esc(e.message)}</span></div>`}
+}
+function desenharResultado(r){
+  const res=$('#res');
+  if(!r.ok){
+    const tit={inativo:'Carteirinha inativa',bloqueado:'Carteirinha bloqueada',invalido:'QR inválido ou expirado',replay:'QR já utilizado',limite:'Muitas tentativas'}[r.motivo]||'Não foi possível validar';
+    res.innerHTML=`<section class="card res bad"><div class="res-h"><div class="res-i">${ic('x')}</div><div class="grow"><b style="font-size:1.05rem">${esc(tit)}</b>${r.membro?`<small>${esc(r.membro.nome)} · ${esc(fmtCod(r.membro.codigo))}</small>`:''}</div></div>
+      <p class="muted">${esc(r.erro)}</p><button type="button" class="btn sec block" style="margin-top:14px" data-act="nova-val">Nova validação</button></section>`;
+    return;
+  }
+  const m=r.membro;
+  res.innerHTML=`<section class="card res ok"><div class="res-h"><div class="res-i">${ic('check')}</div><div class="grow"><b style="font-size:1.1rem">${esc(m.nome)}</b><small>Carteirinha ativa · ${esc(fmtCod(m.codigo))} · até ${esc(dt(m.valido_ate))}</small></div></div>
+    <h3>Qual benefício será usado?</h3>
+    ${r.beneficios.length?r.beneficios.map(b=>{
+      const rest=Math.max(b.limite_qtd-(b.usados||0),0),off=rest===0;
+      return `<label class="opt ${off?'off':''}"><input type="radio" name="ben" value="${esc(b.id)}" ${off?'disabled':''}><div class="grow"><b>${esc(b.titulo)}</b>${b.regras?`<small>${esc(b.regras)}</small>`:''}<small>${off?`<b style="display:inline;color:var(--red)">Limite atingido ${esc(LIMITE_TXT[b.limite_periodo])}</b>`:`Restam ${rest} de ${b.limite_qtd} ${esc(LIMITE_TXT[b.limite_periodo])}`}</small></div></label>`}).join('')
+      :'<p class="muted">Este estabelecimento ainda não tem benefício ativo.</p>'}
+    <div class="field" style="margin:14px 0"><label for="vConta">Valor da conta em R$ (opcional)</label><input id="vConta" inputmode="decimal" placeholder="0,00"></div>
+    <button type="button" class="btn ok block" data-act="confirmar-uso">${ic('check')} Confirmar uso</button>
+    <button type="button" class="btn sec block" style="margin-top:10px" data-act="nova-val">Cancelar</button></section>`;
+  // pré-seleciona o primeiro benefício disponível: no caso comum (um benefício só) é um toque
+  const primeiro=res.querySelector('input[name=ben]:not(:disabled)');if(primeiro)primeiro.checked=true;
+}
+acoes['confirmar-uso']=async el=>{
+  const ben=$('input[name=ben]:checked');if(!ben)return toast('Escolha o benefício.','erro');
+  const valor=parseValor($('#vConta').value);if(Number.isNaN(valor))return toast('Valor da conta inválido.','erro');
+  el.disabled=true;
+  try{
+    const r=await tk('nvd_parceiro_confirmar_uso',{p_validacao_id:S.val.validacao_id,p_beneficio_id:ben.value,p_valor_conta:valor},{raw:true});
+    if(!r.ok){toast(r.erro,'erro');el.disabled=false;return}
+    vibrar(80);
+    $('#res').innerHTML=`<section class="card res ok" style="text-align:center"><div class="res-i" style="margin:0 auto 10px;width:64px;height:64px">${ic('check')}</div><h2>Uso registrado</h2>
+      <p class="muted" style="margin:6px 0 16px">${esc(r.membro)} · ${esc(r.beneficio)}<br>Restam ${r.restantes} ${esc(LIMITE_TXT[r.limite_periodo])}.</p>
+      <button type="button" class="btn block" data-act="nova-val">Nova validação</button></section>`;
+  }catch(e){el.disabled=false;throw e}
+};
+
+/* --- leitor de QR pela câmera --- */
+let scanEstado=null;
+function carregarJsQR(){
+  if(window.jsQR)return Promise.resolve();
+  return new Promise((ok,falha)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';s.integrity='sha256-vEDIoVGWI2sjFNsIVvcsoLSZgM1UE7jIUqc0n1/uCFk=';s.crossOrigin='anonymous';
+    s.onload=()=>window.jsQR?ok():falha(new Error('jsQR'));s.onerror=()=>falha(new Error('jsQR'));
+    document.head.appendChild(s);
+  });
+}
+function fecharScanner(){
+  if(scanEstado){clearInterval(scanEstado.timer);scanEstado.stream.getTracks().forEach(t=>t.stop());scanEstado=null}
+  $$('.scan').forEach(e=>e.remove());document.body.classList.remove('noscroll');
+}
+acoes['fechar-scan']=()=>fecharScanner();
+acoes.scan=async()=>{
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return toast('Este navegador não abre a câmera. Digite o código e o PIN.','erro');
+  const el=document.createElement('div');el.className='scan';
+  el.innerHTML=`<video playsinline muted autoplay></video><div class="frame"><i></i></div><div class="bar"><b>Escaneie o QR da carteirinha</b><button type="button" class="ib" data-act="fechar-scan" aria-label="Fechar">${ic('x')}</button></div><div class="msg" id="scanMsg">Aponte a câmera para o QR code</div>`;
+  document.body.appendChild(el);document.body.classList.add('noscroll');
+  const video=el.querySelector('video');let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})}
+  catch(e){fecharScanner();return toast(e&&e.name==='NotAllowedError'?'Permita o uso da câmera para escanear.':'Não foi possível abrir a câmera.','erro')}
+  if(!$('.scan')){stream.getTracks().forEach(t=>t.stop());return}
+  video.srcObject=stream;try{await video.play()}catch(e){}
+  let det=null;
+  try{if('BarcodeDetector' in window&&(await BarcodeDetector.getSupportedFormats()).includes('qr_code'))det=new BarcodeDetector({formats:['qr_code']})}catch(e){}
+  // iPhone/Safari e Firefox não têm BarcodeDetector: cai pro jsQR, carregado só quando precisa
+  if(!det){try{await carregarJsQR()}catch(e){fecharScanner();return toast('Não foi possível carregar o leitor. Digite o código e o PIN.','erro')}}
+  const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
+  scanEstado={stream,busy:false,timer:null};
+  const est=scanEstado;
+  est.timer=setInterval(async()=>{
+    if(est.busy||video.readyState<2||!video.videoWidth)return;
+    est.busy=true;
+    try{
+      let txt=null;
+      if(det){const r=await det.detect(video);if(r.length)txt=r[0].rawValue}
+      else{
+        const w=Math.min(video.videoWidth,720),h=Math.round(w*video.videoHeight/video.videoWidth);
+        cv.width=w;cv.height=h;cx.drawImage(video,0,0,w,h);
+        const d=cx.getImageData(0,0,w,h),r=window.jsQR(d.data,w,h,{inversionAttempts:'dontInvert'});if(r)txt=r.data;
+      }
+      if(txt&&/^NVD1\./.test(txt)){fecharScanner();validar({p_qr:txt});return}
+      if(txt){const m=$('#scanMsg');if(m)m.textContent='Esse QR não é de uma carteirinha NVD CARD.'}
+    }catch(e){}
+    est.busy=false;
+  },220);
+};
+
+tabsParceiro.usos=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_parceiro_resumo')}catch(e){return erroView(v,e)}
+  v.innerHTML=`<div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><small>Hoje</small><b>${r.stats.hoje}</b></div><div class="kpi"><small>Este mês</small><b>${r.stats.mes}</b></div></div>
+    <div class="head"><h2>Últimos usos</h2></div>
+    <div class="list">${r.usos.length?r.usos.map(u=>`<div class="row" ${u.estornado?'style="opacity:.55"':''}><div class="grow"><b>${esc(u.membro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}${u.valor_conta_centavos!=null?' · conta '+brl(u.valor_conta_centavos):''}</small></div>${u.estornado?'<span class="pill mut">Estornado</span>':u.pode_estornar?`<button type="button" class="btn danger sm" data-act="estornar" data-id="${esc(u.id)}">Estornar</button>`:''}</div>`).join(''):vazio('list','Nenhum uso registrado ainda.')}</div>
+    <p class="muted" style="font-size:.78rem;margin-top:12px">Um uso pode ser estornado em até 60 minutos, caso tenha sido registrado por engano.</p>`;
+};
+acoes.estornar=async el=>{
+  if(!confirm('Estornar este uso? O cliente poderá usar o benefício de novo.'))return;
+  await tk('nvd_parceiro_estornar_uso',{p_uso_id:el.dataset.id});toast('Uso estornado.','ok');tabsParceiro.usos();
+};
+tabsParceiro.conta=()=>{
+  $('#view').innerHTML=viewConta(`<section class="card"><h3>Estabelecimento</h3><p><b>${esc(S.parceiro?S.parceiro.nome:'—')}</b></p><p class="muted">${esc(S.parceiro?S.parceiro.categoria:'')}</p></section>`);
+};
+/* =====================================================================
+   ADMIN: pagamentos (Pix manual), membros, parceiros, planos, acessos
+   ===================================================================== */
+const ADMIN_TABS=[['painel','Painel','grid'],['pagtos','Pagamentos','dollar'],['membros','Membros','users'],['parceiros','Parceiros','store'],['planos','Planos','tag'],['usos','Usos','list'],['acessos','Acessos','shield'],['config','Config','sliders'],['conta','Conta','user']];
+const tabsAdmin={};
+const METODOS={pix_manual:'Pix manual',pix:'Pix',cartao:'Cartão',boleto:'Boleto',cortesia:'Cortesia'};
+const CATS=['Restaurante','Bar','Pizzaria','Hamburgueria','Cafeteria','Padaria','Sorveteria','Japonês','Churrascaria','Doceria','Academia','Estética','Saúde','Lazer','Serviços','Outros'];
+function renderAdmin(){
+  $('#app').innerHTML=`<div class="app"><header class="top">${marca('Administração')}<div class="grow"></div><button type="button" class="ib" data-act="tema" aria-label="Alternar tema">${ic('sun')}</button></header>
+    <nav class="atabs" id="atabs">${ADMIN_TABS.map(([k,t,i])=>`<button type="button" class="atab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span>${k==='pagtos'?'<span class="n" id="nPend" hidden></span>':''}</button>`).join('')}</nav>
+    <main class="view" id="view"></main></div>`;
+  irTab(S.tab&&ADMIN_TABS.some(t=>t[0]===S.tab)?S.tab:'painel');
+  atualizarPendentes();
+}
+async function atualizarPendentes(){
+  try{const p=await tk('nvd_admin_painel'),n=$('#nPend');if(n){n.textContent=p.pendentes;n.hidden=!(p.pendentes>0)}}catch(e){}
+}
+function statusMembro(m){
+  if(m.bloqueado)return ['bad','Bloqueado'];
+  if(m.valido_ate&&new Date(m.valido_ate)>new Date())return ['ok','Ativo até '+dt(m.valido_ate)];
+  if(m.valido_ate)return ['warn','Vencido em '+dt(m.valido_ate)];
+  return ['mut','Sem plano'];
+}
+
+/* --- painel --- */
+tabsAdmin.painel=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let p;try{p=await tk('nvd_admin_painel')}catch(e){return erroView(v,e)}
+  v.innerHTML=`<div class="kpis">
+    <div class="kpi"><small>Membros ativos</small><b>${p.membros_ativos}</b></div>
+    <div class="kpi"><small>Vencendo em 7 dias</small><b>${p.vencendo_7d}</b></div>
+    <button type="button" class="kpi ${p.pendentes?'hot':''}" data-act="tab" data-t="pagtos" style="font:inherit;color:inherit;text-align:left;cursor:pointer"><small>Pagamentos a confirmar</small><b>${p.pendentes}</b></button>
+    <div class="kpi"><small>Receita confirmada no mês</small><b>${brl(p.receita_mes_centavos)}</b></div>
+    <div class="kpi"><small>Usos no mês</small><b>${p.usos_mes}</b></div>
+    <div class="kpi"><small>Parceiros ativos</small><b>${p.parceiros_ativos}</b></div></div>
+    <section class="card"><h3>Parceiros mais usados no mês</h3>${p.top_parceiros.length?`<div class="list">${p.top_parceiros.map((t,i)=>`<div class="row"><div class="logo">${i+1}º</div><div class="grow"><b>${esc(t.nome)}</b></div><b>${t.usos}</b></div>`).join('')}</div>`:'<p class="muted">Ainda sem usos neste mês.</p>'}</section>
+    <section class="card"><h3>Para começar</h3><ol class="steps"><li>Em <b>Config</b>, cadastre a chave Pix e o WhatsApp de suporte.</li><li>Em <b>Planos</b>, ajuste preços e duração (os valores iniciais são só exemplo).</li><li>Em <b>Parceiros</b>, cadastre o estabelecimento e seus benefícios.</li><li>Em <b>Acessos</b>, crie o login do atendente de cada parceiro e o seu próprio login de administrador.</li></ol></section>`;
+};
+
+/* --- pagamentos --- */
+S.pagFiltro='pendente';
+tabsAdmin.pagtos=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_admin_pagamentos',{p_status:S.pagFiltro})}catch(e){return erroView(v,e)}
+  const F=[['pendente','Pendentes'],['pago','Pagos'],['cancelado','Cancelados'],['todos','Todos']];
+  const ST={pendente:['warn','Pendente'],pago:['ok','Pago'],cancelado:['mut','Cancelado']};
+  v.innerHTML=`<div class="fchips">${F.map(([k,t])=>`<button type="button" class="fchip ${S.pagFiltro===k?'on':''}" data-act="pag-filtro" data-v="${k}">${t}</button>`).join('')}</div>
+    <div class="list">${r.pagamentos.length?r.pagamentos.map(g=>{const s=ST[g.status]||['mut',g.status];return `<div class="row" style="flex-wrap:wrap;align-items:flex-start">
+      <div class="grow"><b>${esc(g.membro_nome)}</b><small>${esc(fmtCod(g.membro_codigo))} · ${esc(g.membro_email)}${g.membro_telefone?' · '+esc(g.membro_telefone):''}</small>
+      <small>${esc(g.plano_nome)} · <b style="display:inline">${brl(g.valor_centavos)}</b> · ${esc(g.referencia)} · ${esc(METODOS[g.metodo]||g.metodo)}</small>
+      ${g.status==='pendente'?(g.informado_em?`<small style="color:var(--amber)">Avisou que pagou ${esc(ha(g.informado_em))}</small>`:`<small>Ainda não avisou o pagamento · criado ${esc(ha(g.criado_em))}</small>`):`<small>${esc(dth(g.pago_em||g.criado_em))}</small>`}
+      ${g.observacao?`<small>“${esc(g.observacao)}”</small>`:''}</div>
+      <div class="end"><span class="pill ${s[0]}">${s[1]}</span></div>
+      ${g.status==='pendente'?`<div style="display:flex;gap:8px;width:100%;margin-top:6px"><button type="button" class="btn ok sm grow" data-act="pag-confirmar" data-id="${esc(g.id)}" data-n="${esc(g.membro_nome)}" data-v="${g.valor_centavos}">${ic('check')} Confirmar recebimento</button><button type="button" class="btn danger sm" data-act="pag-cancelar" data-id="${esc(g.id)}">Cancelar</button></div>`:''}</div>`}).join('')
+    :vazio('dollar','Nenhum pagamento neste filtro.')}</div>`;
+};
+acoes['pag-filtro']=el=>{S.pagFiltro=el.dataset.v;tabsAdmin.pagtos()};
+acoes['pag-confirmar']=async el=>{
+  if(!confirm(`Confirmar o recebimento de ${brl(Number(el.dataset.v))} de ${el.dataset.n}? A carteirinha será liberada agora.`))return;
+  await tk('nvd_admin_pagamento_confirmar',{p_id:el.dataset.id});
+  toast('Pagamento confirmado. Carteirinha liberada.','ok');tabsAdmin.pagtos();atualizarPendentes();
+};
+acoes['pag-cancelar']=async el=>{
+  if(!confirm('Cancelar esta cobrança pendente?'))return;
+  await tk('nvd_admin_pagamento_cancelar',{p_id:el.dataset.id});toast('Cobrança cancelada.','ok');tabsAdmin.pagtos();atualizarPendentes();
+};
+
+/* --- membros --- */
+S.mBusca='';
+tabsAdmin.membros=()=>{
+  $('#view').innerHTML=`<div class="field" style="margin-bottom:12px"><input id="mq" type="search" placeholder="Buscar por nome, e-mail, telefone ou código" value="${esc(S.mBusca)}" aria-label="Buscar membros"></div><div id="mlist">${skl()}</div>`;
+  listarMembros();
+};
+async function listarMembros(){
+  const L=$('#mlist');if(!L)return;
+  let r;try{r=await tk('nvd_admin_membros',{p_busca:S.mBusca})}catch(e){return erroView(L,e)}
+  if(!$('#mlist'))return;
+  S.membros=r.membros;
+  L.innerHTML=`<p class="muted" style="font-size:.8rem;margin-bottom:8px">${r.membros.length} membro(s)${r.membros.length===200?' (mostrando os 200 mais recentes, use a busca)':''}</p><div class="list">${r.membros.length?r.membros.map(m=>{const s=statusMembro(m);return `<button type="button" class="row" data-act="membro" data-id="${esc(m.id)}"><div class="logo">${esc(ini(m.nome))}</div><div class="grow"><b>${esc(m.nome)}</b><small>${esc(fmtCod(m.codigo))} · ${esc(m.email)}</small></div><span class="pill ${s[0]}">${esc(s[1])}</span></button>`}).join(''):vazio('users','Nenhum membro encontrado.')}</div>`;
+}
+document.addEventListener('input',e=>{if(e.target.id==='mq'){S.mBusca=e.target.value;clearTimeout(S.mT);S.mT=setTimeout(listarMembros,300)}});
+acoes.membro=async el=>{
+  const m=S.membros.find(x=>x.id===el.dataset.id);if(!m)return;
+  abrirSheet(skl(),m.nome);
+  let planos=[];try{planos=(await tk('nvd_admin_planos')).planos}catch(e){}
+  const st=statusMembro(m),id=esc(m.id);
+  sheetCorpo(`<div class="stack"><div><span class="pill ${st[0]}">${esc(st[1])}</span></div>
+    <div><div class="kv"><span>Código</span><b>${esc(fmtCod(m.codigo))}</b></div><div class="kv"><span>E-mail</span><b>${esc(m.email)}</b></div><div class="kv"><span>WhatsApp</span><b>${esc(m.telefone||'—')}</b></div><div class="kv"><span>Cadastro</span><b>${esc(dt(m.criado_em))}</b></div><div class="kv"><span>Usos de benefício</span><b>${m.usos}</b></div></div>
+    ${m.bloqueado&&m.motivo_bloqueio?`<div class="banner bad">${esc(m.motivo_bloqueio)}</div>`:''}
+    <h3 style="margin-top:6px">Liberar ou estender a carteirinha</h3>
+    <form data-form="liberar" data-id="${id}" class="stack">
+      ${sel('lPlano','Plano',[['','Cortesia por dias (informe abaixo)'],...planos.map(p=>[p.id,`${p.nome} · ${brl(p.preco_centavos)} · ${p.periodo_dias} dias`])],'')}
+      ${fld('lDias','Dias (só para cortesia)','30',{mode:'numeric'})}
+      ${sel('lMet','Como foi pago',[['pix_manual','Pix recebido fora do fluxo'],['cortesia','Cortesia (sem cobrança)']],'cortesia')}
+      <button class="btn block" type="submit">Liberar carteirinha</button>
+    </form>
+    <div class="grid2"><button type="button" class="btn sec" data-act="mem-encerrar" data-id="${id}">Encerrar plano</button>
+      <button type="button" class="btn ${m.bloqueado?'sec':'danger'}" data-act="mem-bloquear" data-id="${id}" data-b="${m.bloqueado?0:1}">${m.bloqueado?'Desbloquear':'Bloquear'}</button></div>
+    <button type="button" class="btn danger" data-act="mem-excluir" data-id="${id}" data-n="${esc(m.nome)}">${ic('trash')} Excluir conta e dados (LGPD)</button></div>`);
+};
+forms.liberar=async f=>{
+  const plano=val('lPlano'),dias=parseInt(val('lDias'),10);
+  await tk('nvd_admin_membro_liberar',{p_membro_id:f.dataset.id,p_plano_id:plano||null,p_dias:plano?null:(dias||null),p_metodo:val('lMet')});
+  fecharSheet();toast('Carteirinha liberada.','ok');listarMembros();atualizarPendentes();
+};
+acoes['mem-encerrar']=async el=>{
+  if(!confirm('Encerrar o plano agora? A carteirinha deixa de validar imediatamente.'))return;
+  await tk('nvd_admin_membro_encerrar',{p_membro_id:el.dataset.id});fecharSheet();toast('Plano encerrado.','ok');listarMembros();
+};
+acoes['mem-bloquear']=async el=>{
+  const bloquear=el.dataset.b==='1';let motivo='';
+  if(bloquear){motivo=prompt('Motivo do bloqueio (opcional):','');if(motivo===null)return}
+  await tk('nvd_admin_membro_bloquear',{p_membro_id:el.dataset.id,p_bloquear:bloquear,p_motivo:motivo});
+  fecharSheet();toast(bloquear?'Membro bloqueado.':'Membro desbloqueado.','ok');listarMembros();
+};
+acoes['mem-excluir']=async el=>{
+  if(!confirm(`Excluir a conta de ${el.dataset.n} e TODOS os dados dela (pagamentos e usos)? Não dá pra desfazer.`))return;
+  await tk('nvd_admin_membro_excluir',{p_membro_id:el.dataset.id});fecharSheet();toast('Conta excluída.','ok');listarMembros();
+};
+
+/* --- parceiros e benefícios --- */
+async function carregarParceirosAdm(){S.parceirosAdm=(await tk('nvd_admin_parceiros')).parceiros}
+function desenharParceirosAdm(){
+  const v=$('#view');if(!v||S.tab!=='parceiros')return;
+  v.innerHTML=`<div class="head"><h2>Parceiros</h2><div class="grow"></div><button type="button" class="btn sm" data-act="parc-novo">${ic('plus')} Novo</button></div>
+    <div class="list">${S.parceirosAdm.length?S.parceirosAdm.map(p=>{const lg=seguraUrl(p.logo_url);return `<button type="button" class="row" data-act="parc-edit" data-id="${esc(p.id)}"><div class="logo">${lg?`<img src="${esc(lg)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:esc(ini(p.nome))}</div><div class="grow"><b>${esc(p.nome)}</b><small>${esc(p.categoria)}${p.cidade?' · '+esc(p.cidade):''} · ${p.beneficios.filter(b=>b.ativo).length} benefício(s) · ${p.usos} uso(s)</small></div>${p.ativo?'':'<span class="pill mut">Inativo</span>'}${ic('chevron')}</button>`}).join(''):vazio('store','Nenhum estabelecimento cadastrado ainda.')}</div>`;
+}
+tabsAdmin.parceiros=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  try{await carregarParceirosAdm()}catch(e){return erroView(v,e)}
+  desenharParceirosAdm();
+};
+function sheetParceiro(p){
+  p=p||{};
+  const beneficios=p.beneficios||[];
+  abrirSheet(`<form data-form="parc-salvar" data-id="${esc(p.id||'')}" class="stack">
+    ${fld('prNome','Nome',p.nome||'',{max:80})}
+    ${fld('prCat','Categoria',p.categoria||'Restaurante',{max:40,list:'catsList'})}<datalist id="catsList">${CATS.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+    ${fld('prDesc','Descrição',p.descricao||'',{area:1,max:600,ph:'O que o cliente precisa saber sobre o lugar'})}
+    <div class="grid2">${fld('prEnd','Endereço',p.endereco||'',{max:200})}${fld('prCid','Cidade',p.cidade||'',{max:80})}</div>
+    <div class="grid2">${fld('prTel','Telefone',p.telefone||'',{type:'tel',max:30})}${fld('prIg','Instagram (sem @)',p.instagram||'',{max:40})}</div>
+    ${fld('prLogo','Link do logo (opcional)',p.logo_url||'',{type:'url',max:500,ph:'https://…',hint:'Cole o endereço de uma imagem já publicada.'})}
+    ${sel('prAtivo','Situação',[['true','Ativo (aparece para os clientes)'],['false','Inativo']],p.ativo===false?'false':'true')}
+    <button class="btn block" type="submit">${p.id?'Salvar alterações':'Cadastrar estabelecimento'}</button>
+  </form>
+  ${p.id?`<h3 style="margin:24px 0 10px">Benefícios</h3>
+    <div class="list">${beneficios.length?beneficios.map(b=>`<button type="button" class="row" data-act="ben-edit" data-p="${esc(p.id)}" data-id="${esc(b.id)}"><span class="chip">${esc(resumoBenef(b))}</span><div class="grow"><b>${esc(b.titulo)}</b><small>${b.limite_qtd} uso(s) ${esc(LIMITE_TXT[b.limite_periodo])}${b.ativo?'':' · inativo'}</small></div>${ic('edit')}</button>`).join(''):'<p class="muted">Nenhum benefício ainda. Sem benefício ativo o cliente não consegue usar a carteirinha aqui.</p>'}</div>
+    <button type="button" class="btn sec block" style="margin-top:10px" data-act="ben-novo" data-p="${esc(p.id)}">${ic('plus')} Adicionar benefício</button>
+    <h3 style="margin:24px 0 6px">Acesso do atendente</h3><p class="muted" style="font-size:.86rem">${p.usuarios} acesso(s) criado(s). Crie o login dos atendentes na aba <b>Acessos</b>.</p>
+    <button type="button" class="btn danger block" style="margin-top:24px" data-act="parc-excluir" data-id="${esc(p.id)}" data-n="${esc(p.nome)}">${ic('trash')} Excluir estabelecimento</button>`:''}`,p.id?p.nome:'Novo estabelecimento');
+}
+acoes['parc-novo']=()=>sheetParceiro(null);
+acoes['parc-edit']=el=>sheetParceiro(S.parceirosAdm.find(x=>x.id===el.dataset.id));
+forms['parc-salvar']=async f=>{
+  const r=await tk('nvd_admin_parceiro_salvar',{p_id:f.dataset.id||null,p_dados:{nome:val('prNome'),categoria:val('prCat'),descricao:val('prDesc'),endereco:val('prEnd'),cidade:val('prCid'),telefone:val('prTel'),instagram:val('prIg'),logo_url:val('prLogo'),ativo:val('prAtivo')==='true'}});
+  await carregarParceirosAdm();desenharParceirosAdm();toast('Salvo.','ok');
+  // reabre já em modo edição: quem acabou de cadastrar o parceiro quer adicionar o benefício em seguida
+  sheetParceiro(S.parceirosAdm.find(x=>x.id===r.id));
+};
+acoes['parc-excluir']=async el=>{
+  if(!confirm(`Excluir ${el.dataset.n}? Se já houver usos registrados, ele é apenas desativado para preservar o histórico.`))return;
+  const r=await tk('nvd_admin_parceiro_excluir',{p_id:el.dataset.id});
+  fecharSheet();toast(r.desativado?'Estabelecimento desativado (tem histórico de uso).':'Estabelecimento excluído.','ok');
+  await carregarParceirosAdm();desenharParceirosAdm();
+};
+function sheetBeneficio(parceiroId,b){
+  b=b||{};
+  abrirSheet(`<form data-form="ben-salvar" data-p="${esc(parceiroId)}" data-id="${esc(b.id||'')}" class="stack">
+    ${fld('bTitulo','Benefício',b.titulo||'',{max:120,ph:'Ex.: 2 pratos principais pelo preço de 1'})}
+    ${sel('bTipo','Tipo',TIPOS_BENEF,b.tipo||'2x1')}
+    ${fld('bValor','Valor (% ou R$, só nos tipos de desconto)',b.valor!=null?String(b.valor).replace('.',','):'',{mode:'decimal',ph:'Ex.: 20'})}
+    ${fld('bRegras','Regras (opcional)',b.regras||'',{area:1,max:500,ph:'Ex.: Válido de segunda a quinta, exceto feriados.'})}
+    <div class="grid2">${fld('bQtd','Usos por cliente',String(b.limite_qtd||1),{mode:'numeric'})}${sel('bPer','A cada',[['dia','Dia'],['semana','Semana'],['mes','Mês'],['sempre','Sem renovar (total)']],b.limite_periodo||'mes')}</div>
+    ${sel('bAtivo','Situação',[['true','Ativo'],['false','Inativo']],b.ativo===false?'false':'true')}
+    <button class="btn block" type="submit">Salvar benefício</button>
+    ${b.id?`<button type="button" class="btn danger block" data-act="ben-excluir" data-id="${esc(b.id)}" data-p="${esc(parceiroId)}">${ic('trash')} Excluir benefício</button>`:''}
+  </form>`,b.id?'Editar benefício':'Novo benefício');
+}
+acoes['ben-novo']=el=>sheetBeneficio(el.dataset.p,null);
+acoes['ben-edit']=el=>{const p=S.parceirosAdm.find(x=>x.id===el.dataset.p);sheetBeneficio(el.dataset.p,p&&p.beneficios.find(x=>x.id===el.dataset.id))};
+forms['ben-salvar']=async f=>{
+  const valor=parseValor(val('bValor'));if(Number.isNaN(valor))return toast('Valor inválido.','erro');
+  await tk('nvd_admin_beneficio_salvar',{p_id:f.dataset.id||null,p_parceiro_id:f.dataset.p,p_dados:{titulo:val('bTitulo'),tipo:val('bTipo'),valor,regras:val('bRegras'),limite_qtd:parseInt(val('bQtd'),10)||1,limite_periodo:val('bPer'),ativo:val('bAtivo')==='true'}});
+  await carregarParceirosAdm();desenharParceirosAdm();toast('Benefício salvo.','ok');
+  sheetParceiro(S.parceirosAdm.find(x=>x.id===f.dataset.p));
+};
+acoes['ben-excluir']=async el=>{
+  if(!confirm('Excluir este benefício? Se já foi usado, ele é apenas desativado.'))return;
+  const r=await tk('nvd_admin_beneficio_excluir',{p_id:el.dataset.id});
+  await carregarParceirosAdm();desenharParceirosAdm();toast(r.desativado?'Benefício desativado (tem histórico).':'Benefício excluído.','ok');
+  sheetParceiro(S.parceirosAdm.find(x=>x.id===el.dataset.p));
+};
+
+/* --- planos --- */
+tabsAdmin.planos=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_admin_planos')}catch(e){return erroView(v,e)}
+  S.planosAdm=r.planos;
+  v.innerHTML=`<div class="head"><h2>Planos</h2><div class="grow"></div><button type="button" class="btn sm" data-act="plano-novo">${ic('plus')} Novo</button></div>
+    <div class="list">${r.planos.length?r.planos.map(p=>`<button type="button" class="row" data-act="plano-edit" data-id="${esc(p.id)}"><div class="grow"><b>${esc(p.nome)}</b><small>${esc(p.descricao)}</small></div><div class="end"><b>${brl(p.preco_centavos)}</b><small>${p.periodo_dias} dias</small></div>${p.ativo?'':'<span class="pill mut">Inativo</span>'}</button>`).join(''):vazio('tag','Nenhum plano cadastrado.')}</div>`;
+};
+function sheetPlano(p){
+  p=p||{};
+  abrirSheet(`<form data-form="plano-salvar" data-id="${esc(p.id||'')}" class="stack">
+    ${fld('plNome','Nome do plano',p.nome||'',{max:60,ph:'Ex.: Mensal'})}
+    ${fld('plDesc','Descrição (opcional)',p.descricao||'',{max:300})}
+    <div class="grid2">${fld('plPreco','Preço (R$)',p.preco_centavos!=null?(p.preco_centavos/100).toFixed(2).replace('.',','):'',{mode:'decimal',ph:'19,90'})}${fld('plDias','Duração (dias)',String(p.periodo_dias||30),{mode:'numeric'})}</div>
+    <div class="grid2">${fld('plOrdem','Ordem na lista',String(p.ordem||0),{mode:'numeric'})}${sel('plAtivo','Situação',[['true','Ativo'],['false','Inativo']],p.ativo===false?'false':'true')}</div>
+    <button class="btn block" type="submit">Salvar plano</button></form>`,p.id?'Editar plano':'Novo plano');
+}
+acoes['plano-novo']=()=>sheetPlano(null);
+acoes['plano-edit']=el=>sheetPlano(S.planosAdm.find(x=>x.id===el.dataset.id));
+forms['plano-salvar']=async f=>{
+  const preco=parseValor(val('plPreco'));if(preco==null||Number.isNaN(preco))return toast('Informe o preço do plano.','erro');
+  await tk('nvd_admin_plano_salvar',{p_id:f.dataset.id||null,p_dados:{nome:val('plNome'),descricao:val('plDesc'),preco_centavos:Math.round(preco*100),periodo_dias:parseInt(val('plDias'),10)||0,ordem:parseInt(val('plOrdem'),10)||0,ativo:val('plAtivo')==='true'}});
+  fecharSheet();toast('Plano salvo.','ok');tabsAdmin.planos();
+};
+
+/* --- usos --- */
+tabsAdmin.usos=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_admin_usos',{p_limite:150})}catch(e){return erroView(v,e)}
+  v.innerHTML=`<div class="head"><h2>Usos recentes</h2></div><div class="list">${r.usos.length?r.usos.map(u=>`<div class="row" style="${u.estornado_em?'opacity:.55':''}"><div class="grow"><b>${esc(u.parceiro_nome)}</b><small>${esc(u.membro_nome)} · ${esc(fmtCod(u.membro_codigo))}</small><small>${esc(u.beneficio_titulo)} · ${esc(dth(u.criado_em))}${u.valor_conta_centavos!=null?' · conta '+brl(u.valor_conta_centavos):''}${u.registrado_por_nome?' · por '+esc(u.registrado_por_nome):''}</small></div>${u.estornado_em?'<span class="pill mut">Estornado</span>':`<button type="button" class="btn danger sm" data-act="uso-estornar" data-id="${esc(u.id)}">Estornar</button>`}</div>`).join(''):vazio('list','Nenhum uso registrado ainda.')}</div>`;
+};
+acoes['uso-estornar']=async el=>{
+  if(!confirm('Estornar este uso? O cliente poderá usar o benefício de novo.'))return;
+  await tk('nvd_admin_uso_estornar',{p_id:el.dataset.id});toast('Uso estornado.','ok');tabsAdmin.usos();
+};
+
+/* --- acessos (admins e atendentes de parceiros) --- */
+tabsAdmin.acessos=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_admin_usuarios')}catch(e){return erroView(v,e)}
+  S.usuariosAdm=r.usuarios;S.euId=r.eu;
+  v.innerHTML=`<div class="head"><h2>Acessos</h2><div class="grow"></div><button type="button" class="btn sm" data-act="acesso-novo">${ic('plus')} Novo</button></div>
+    <div class="list">${r.usuarios.map(u=>`<button type="button" class="row" data-act="acesso-edit" data-id="${esc(u.id)}"><div class="logo">${esc(ini(u.nome))}</div><div class="grow"><b>${esc(u.nome)}${u.id===r.eu?' (você)':''}</b><small>${esc(u.email)}${u.parceiro_nome?' · '+esc(u.parceiro_nome):''}</small><small>${u.ultimo_login?'Último acesso '+esc(dth(u.ultimo_login)):'Nunca entrou'}</small></div><span class="pill ${u.papel==='admin'?'info':'mut'}">${u.papel==='admin'?'ADMIN':'ATENDENTE'}</span>${u.ativo?'':'<span class="pill bad">Inativo</span>'}</button>`).join('')}</div>`;
+};
+acoes['acesso-novo']=async()=>{
+  let parc=[];try{parc=(await tk('nvd_admin_parceiros')).parceiros}catch(e){}
+  abrirSheet(`<form data-form="acesso-criar" class="stack">
+    ${sel('acPapel','Tipo de acesso',[['parceiro','Atendente de um parceiro (valida carteirinhas)'],['admin','Administrador']],'parceiro')}
+    ${sel('acParc','Estabelecimento (só para atendente)',parc.length?parc.map(p=>[p.id,p.nome]):[['','Cadastre um parceiro primeiro']],'')}
+    ${fld('acNome','Nome',''  ,{max:80})}
+    ${fld('acEmail','E-mail (será o login)','',{type:'email',mode:'email',max:120,auto:'off'})}
+    ${fld('acSenha','Senha inicial','',{type:'text',auto:'off',hint:'Mínimo de 8 caracteres. Passe para a pessoa, que pode trocar na aba Conta.'})}
+    <button class="btn block" type="submit">Criar acesso</button></form>`,'Novo acesso');
+};
+forms['acesso-criar']=async()=>{
+  await tk('nvd_admin_usuario_salvar',{p_id:null,p_dados:{papel:val('acPapel'),parceiro_id:val('acParc')||null,nome:val('acNome'),email:val('acEmail'),senha:$('#acSenha').value}});
+  fecharSheet();toast('Acesso criado.','ok');tabsAdmin.acessos();
+};
+acoes['acesso-edit']=el=>{
+  const u=S.usuariosAdm.find(x=>x.id===el.dataset.id);if(!u)return;const eu=u.id===S.euId;
+  abrirSheet(`<form data-form="acesso-salvar" data-id="${esc(u.id)}" class="stack">
+    <p class="muted">${esc(u.email)}${u.parceiro_nome?' · '+esc(u.parceiro_nome):''}</p>
+    ${fld('aeNome','Nome',u.nome,{max:80})}
+    ${sel('aeAtivo','Situação',[['true','Ativo'],['false','Inativo (não consegue entrar)']],u.ativo?'true':'false')}
+    ${fld('aeSenha','Nova senha (opcional)','',{type:'text',auto:'off',hint:'Deixe em branco para manter a atual. Trocar a senha desconecta a pessoa dos aparelhos.'})}
+    <button class="btn block" type="submit">Salvar</button>
+    ${eu?'':`<button type="button" class="btn danger block" data-act="acesso-excluir" data-id="${esc(u.id)}" data-n="${esc(u.nome)}">${ic('trash')} Excluir acesso</button>`}</form>`,u.nome);
+};
+forms['acesso-salvar']=async f=>{
+  await tk('nvd_admin_usuario_salvar',{p_id:f.dataset.id,p_dados:{nome:val('aeNome'),ativo:val('aeAtivo')==='true',senha:$('#aeSenha').value}});
+  fecharSheet();toast('Acesso atualizado.','ok');tabsAdmin.acessos();
+};
+acoes['acesso-excluir']=async el=>{
+  if(!confirm(`Excluir o acesso de ${el.dataset.n}?`))return;
+  await tk('nvd_admin_usuario_excluir',{p_id:el.dataset.id});fecharSheet();toast('Acesso excluído.','ok');tabsAdmin.acessos();
+};
+
+/* --- configurações --- */
+tabsAdmin.config=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=(await tk('nvd_admin_config')).config}catch(e){return erroView(v,e)}
+  v.innerHTML=`<section class="card"><h2>Pagamento e contato</h2><p class="muted" style="margin-bottom:14px">Estas informações aparecem para o cliente na hora de pagar o plano.</p>
+    <form data-form="config" class="stack">
+      ${fld('cfNome','Nome do clube',r.nome_app||'',{max:60})}
+      ${fld('cfPix','Chave Pix',r.pix_chave||'',{max:140,hint:'CPF/CNPJ, e-mail, telefone ou chave aleatória.'})}
+      ${fld('cfFav','Nome do favorecido',r.pix_favorecido||'',{max:80,hint:'Como aparece no app do banco, para o cliente conferir.'})}
+      ${fld('cfInstr','Instruções de pagamento',r.pix_instrucoes||'',{area:1,max:400})}
+      ${fld('cfZap','WhatsApp de suporte',r.whatsapp||'',{mode:'numeric',max:20,ph:'5511999999999',hint:'Só números, com 55 + DDD. Aparece como botão de suporte e de envio de comprovante.'})}
+      <button class="btn block" type="submit">Salvar</button></form></section>`;
+};
+forms.config=async()=>{
+  await tk('nvd_admin_config_salvar',{p_dados:{nome_app:val('cfNome'),pix_chave:val('cfPix'),pix_favorecido:val('cfFav'),pix_instrucoes:val('cfInstr'),whatsapp:val('cfZap')}});
+  toast('Configurações salvas.','ok');
+};
+tabsAdmin.conta=()=>{$('#view').innerHTML=viewConta()};
+
+/* ---------- inicialização ---------- */
+async function boot(){
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  let sv=null;try{sv=JSON.parse(store.get('nvd.sessao')||'null')}catch(e){}
+  if(!sv||!sv.token)return renderAuth();
+  S.token=sv.token;
+  try{
+    const r=await tk('nvd_sessao',{},{semLogout:true});
+    aplicarPerfil(r);store.set('nvd.perfil',JSON.stringify(r));entrar();
+  }catch(e){
+    if(e.offline){
+      // sem internet: se o cliente já entrou antes neste aparelho, a carteirinha ainda abre (QR é calculado localmente)
+      let p=null;try{p=JSON.parse(store.get('nvd.perfil')||'null')}catch(_){}
+      if(p&&p.usuario&&p.usuario.papel==='membro'){aplicarPerfil(p);S.offline=true;return entrar()}
+      return renderAuth('Sem conexão com a internet.');
+    }
+    limparSessao();renderAuth(e.status===401?'Sua sessão expirou. Entre novamente.':e.message);
+  }
+}
+window.addEventListener('DOMContentLoaded',boot);
+</script>
+</body>
+</html>
