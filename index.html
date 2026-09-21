@@ -125,6 +125,8 @@ button.row:hover{border-color:var(--border2)}
 .btn.danger{background:rgba(255,100,115,.14);color:var(--red);border:1px solid rgba(255,100,115,.35)}
 .btn.ok{background:linear-gradient(135deg,#46e2a0,var(--green));color:#04150d}
 .btn.sm{min-height:36px;padding:7px 12px;font-size:.82rem;border-radius:11px}
+/* cresce pra ocupar a sobra, mas nunca encolhe abaixo do texto: com vários botões na linha eles quebram em vez de vazar */
+.btn.fit{flex:1 0 auto}
 .btn.big{min-height:64px;font-size:1.05rem;border-radius:18px}
 .btn.block{display:flex;width:100%}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:4px;margin-bottom:18px}
@@ -182,7 +184,16 @@ button.row:hover{border-color:var(--border2)}
 .filebox .th img{width:100%;height:100%;object-fit:cover}
 .spin{display:inline-block;width:16px;height:16px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex:none}
 @keyframes spin{to{transform:rotate(360deg)}}
-.viewer img{width:100%;border-radius:12px;display:block;background:var(--s2)}
+.viewer img{width:100%;max-height:72vh;object-fit:contain;border-radius:12px;display:block;background:var(--s2)}
+.viewer iframe.pdf{width:100%;height:72vh;min-height:360px;border:1px solid var(--border2);border-radius:12px;background:#fff}
+/* fila de conferência: lista + visualizador lado a lado no computador; no celular o visualizador abre numa janela */
+.split{display:grid;gap:16px}
+.pane{display:none;background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+@media(min-width:900px){
+  .split{grid-template-columns:minmax(300px,380px) 1fr;align-items:start}
+  .pane{display:block;position:sticky;top:76px;max-height:calc(100vh - 96px);overflow:auto}
+}
+.row.sel{border-color:var(--gold);background:rgba(233,185,91,.08)}
 
 /* ===== resultado da validação (parceiro) ===== */
 .res{border-width:2px}
@@ -264,6 +275,7 @@ button.row:hover{border-color:var(--border2)}
 <symbol id="i-file" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></symbol>
 <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
 <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
 </defs></svg>
 
 <div id="app"></div>
@@ -511,6 +523,7 @@ function renderMembro(){
 }
 function irTab(t){
   S.tab=t;pararQr();
+  if(S.papel==='admin')limparArquivos(); // comprovantes abertos ficam em blob na memória: solta ao trocar de aba
   $$('.tabbar .tab,.atab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
   window.scrollTo(0,0);
   const mapa=S.papel==='membro'?tabsMembro:S.papel==='parceiro'?tabsParceiro:tabsAdmin;
@@ -666,12 +679,14 @@ function cardAberto(g,px){
     <div class="kv"><span>Identificador</span><b>${esc(g.referencia)}</b><button type="button" class="ib" data-act="copiar" data-v="${esc(g.referencia)}" aria-label="Copiar identificador">${ic('copy')}</button></div>
     ${px.pix_instrucoes?`<p class="muted" style="font-size:.86rem;margin-top:12px">${esc(px.pix_instrucoes)}</p>`:''}
     <div class="stepn"><i>2</i><b>Anexe o comprovante</b></div>
+    ${g.comprovante_recusa_motivo?`<div class="banner bad">${ic('alert')}<span><b>Comprovante recusado:</b> ${esc(g.comprovante_recusa_motivo)}. Envie um novo comprovante.</span></div>`:''}
     <input type="file" id="fComp" accept="image/*,application/pdf" hidden>
     <div id="compArea"></div>
     <div class="stack" style="margin-top:14px">
-      ${g.informado_em?`<div class="banner ok" style="margin:0">${ic('check')}<span>Pagamento informado ${esc(ha(g.informado_em))}. Estamos conferindo e liberamos a carteirinha em seguida.</span></div>`
+      ${g.comprovante_recusa_motivo?'':g.informado_em?`<div class="banner ok" style="margin:0">${ic('check')}<span>Pagamento informado ${esc(ha(g.informado_em))}. Estamos conferindo e liberamos a carteirinha em seguida.</span></div>`
         :`<button type="button" class="btn sec block" data-act="paguei" data-id="${esc(g.id)}">Já paguei, envio o comprovante depois</button>`}
       ${px.whatsapp?`<a class="btn sec block" target="_blank" rel="noopener" href="https://wa.me/${esc(px.whatsapp)}?text=${encodeURIComponent('Olá! Fiz o pagamento '+g.referencia+' do NVD CARD.')}">${ic('chat')} Falar com o suporte</a>`:''}
+      <button type="button" class="btn danger sm" data-act="pg-cancelar" data-id="${esc(g.id)}">Cancelar este pagamento</button>
     </div></section>`;
 }
 // área do anexo: mostra o que já foi enviado, a prévia do arquivo escolhido ou o botão pra escolher
@@ -683,25 +698,65 @@ function desenharEscolha(){
       <div class="grow"><b style="overflow-wrap:anywhere">${esc(f.name)}</b><small>${esc(tamTxt(f.size))}</small></div>
       <button type="button" class="ib" data-act="comp-remover" aria-label="Remover arquivo">${ic('x')}</button></div>
       <button type="button" class="btn block" style="margin-top:12px" data-act="comp-enviar" data-id="${esc(g.id)}">${ic('upload')} Enviar comprovante</button>`;
-  }else if(c){
+  }else if(c&&!g.comprovante_recusa_motivo){
     area.innerHTML=`<div class="filebox"><div class="th">${ic(/^image\//.test(c.tipo)?'paperclip':'file')}</div>
       <div class="grow"><b>Comprovante enviado</b><small style="overflow-wrap:anywhere">${esc(c.nome)} · ${esc(tamTxt(c.tamanho))} · ${esc(ha(c.em))}</small></div></div>
       <button type="button" class="btn sec sm" style="margin-top:10px" data-act="comp-escolher">${ic('upload')} Trocar arquivo</button>`;
   }else{
-    area.innerHTML=`<button type="button" class="drop" data-act="comp-escolher">${ic('upload')}<b>Anexar comprovante</b><span>Foto, print ou PDF do Pix (até 5 MB)</span></button>`;
+    // sem comprovante ainda, ou o anterior foi recusado pelo administrador
+    area.innerHTML=`${c?`<div class="filebox" style="margin-bottom:10px;opacity:.7"><div class="th">${ic('file')}</div><div class="grow"><b>Comprovante recusado</b><small style="overflow-wrap:anywhere">${esc(c.nome)}</small></div></div>`:''}
+      <button type="button" class="drop" data-act="comp-escolher">${ic('upload')}<b>${c?'Enviar um novo comprovante':'Anexar comprovante'}</b><span>Foto, print ou PDF do Pix (até 5 MB)</span></button>`;
   }
+}
+// uma linha do histórico do cliente, com o que aconteceu (cancelamento, estorno, devolução) e o botão de pedir estorno
+function linhaPg(g){
+  const ST={pendente:['warn','Pendente'],pago:['ok','Pago'],cancelado:['mut','Cancelado'],devolvido:['info','Devolvido']},s=ST[g.status]||['mut',g.status],l=[];
+  if(g.status==='cancelado')l.push(`${g.cancelado_por==='admin'?'Cancelado pelo administrador':'Cancelado por você'}${g.cancelado_motivo?': '+esc(g.cancelado_motivo):''}`);
+  if(g.status==='devolvido')l.push(`Devolvido <b style="display:inline">${brl(g.devolvido_valor_centavos)}</b> em ${esc(dt(g.devolvido_em))}${g.devolucao_obs?' · '+esc(g.devolucao_obs):''}`);
+  if(g.estorno_status==='solicitado')l.push(`<b style="display:inline;color:var(--blue)">Estorno solicitado</b> em ${esc(dt(g.estorno_solicitado_em))}. Aguardando o administrador.`);
+  if(g.estorno_status==='recusado')l.push(`<b style="display:inline;color:var(--red)">Estorno recusado</b>${g.estorno_resposta?': '+esc(g.estorno_resposta):''}`);
+  const pode=g.status==='pago'&&!g.estorno_status;
+  return `<div class="row" style="flex-wrap:wrap;align-items:flex-start"><div class="grow"><b>${esc(g.plano)}</b><small>${esc(g.referencia)} · ${esc(dt(g.pago_em||g.criado_em))}</small>${g.comprovante?`<small>${ic('paperclip','sm')} ${esc(g.comprovante.nome)}</small>`:''}${l.map(t=>`<small>${t}</small>`).join('')}</div>
+    <div class="end"><b>${brl(g.valor_centavos)}</b><span class="pill ${s[0]}">${s[1]}</span></div>
+    ${pode?`<div style="width:100%;margin-top:4px"><button type="button" class="btn sec sm" data-act="pg-estorno" data-id="${esc(g.id)}">Solicitar estorno</button></div>`:''}</div>`;
 }
 tabsMembro.pagtos=async()=>{
   const v=$('#view');v.innerHTML=skl();
   let r;try{r=await tk('nvd_membro_pagamentos')}catch(e){return erroView(v,e)}
   if(S.tab!=='pagtos')return;
   limparPrevia();S.pgto=r;
-  const aberto=abertoPg(),ST={pendente:['warn','Pendente'],pago:['ok','Pago'],cancelado:['mut','Cancelado']};
-  const outros=r.pagamentos.filter(g=>g!==aberto);
+  const aberto=abertoPg(),outros=r.pagamentos.filter(g=>g!==aberto);
   v.innerHTML=`<div class="head"><h2>Pagamentos</h2></div>
     ${aberto?cardAberto(aberto,r.pix||{}):`<section class="card" style="text-align:center"><p class="muted" style="margin-bottom:14px">Nenhum pagamento em aberto.</p><button type="button" class="btn" data-act="planos">${S.cart&&S.cart.valido_ate?'Renovar carteirinha':'Ativar carteirinha'}</button></section>`}
-    ${outros.length?`<div class="head" style="margin-top:22px"><h2>Histórico de pagamentos</h2></div><div class="list">${outros.map(g=>{const s=ST[g.status]||['mut',g.status];return `<div class="row"><div class="grow"><b>${esc(g.plano)}</b><small>${esc(g.referencia)} · ${esc(dt(g.pago_em||g.criado_em))}</small>${g.comprovante?`<small>${ic('paperclip','sm')} ${esc(g.comprovante.nome)}</small>`:''}</div><div class="end"><b>${brl(g.valor_centavos)}</b><span class="pill ${s[0]}">${s[1]}</span></div></div>`}).join('')}</div>`:''}`;
+    ${outros.length?`<div class="head" style="margin-top:22px"><h2>Histórico de pagamentos</h2></div><div class="list">${outros.map(linhaPg).join('')}</div>`:''}`;
   if(aberto)desenharEscolha();
+};
+// cancelar cobrança pendente. Se já avisou que pagou, o cancelamento vira pedido de devolução (o Pix pode ter chegado)
+acoes['pg-cancelar']=el=>{
+  const g=S.pgto&&S.pgto.pagamentos.find(x=>x.id===el.dataset.id);if(!g)return;
+  abrirSheet(`<form data-form="pg-cancelar" data-id="${esc(g.id)}" class="stack">
+    <p class="muted">Cancelar o pagamento de <b>${brl(g.valor_centavos)}</b> (${esc(g.referencia)})?</p>
+    ${g.informado_em?`<div class="banner warn" style="margin:0">${ic('alert')}<span>Você já avisou que pagou. Se o Pix chegou, o administrador devolve o valor: ao cancelar, o pedido de devolução é feito automaticamente.</span></div>`:''}
+    ${fld('cnMotivo','Motivo (opcional)','',{area:1,max:300})}
+    <button class="btn danger block" type="submit">Cancelar pagamento</button>
+    <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,'Cancelar pagamento');
+};
+forms['pg-cancelar']=async f=>{
+  const r=await tk('nvd_membro_cancelar_pagamento',{p_pagamento_id:f.dataset.id,p_motivo:val('cnMotivo')});
+  fecharSheet();toast(r.pediu_estorno?'Pagamento cancelado. Pedimos a devolução ao administrador.':'Pagamento cancelado.','ok');
+  tabsMembro.pagtos();carregarCart().catch(()=>{});
+};
+acoes['pg-estorno']=el=>{
+  const g=S.pgto&&S.pgto.pagamentos.find(x=>x.id===el.dataset.id);if(!g)return;
+  abrirSheet(`<form data-form="pg-estorno" data-id="${esc(g.id)}" class="stack">
+    <p class="muted">Pedir o estorno de <b>${brl(g.valor_centavos)}</b> (${esc(g.plano)}, ${esc(g.referencia)})? O administrador vai analisar. Se aprovar, a devolução é feita por Pix e a carteirinha pode ser encerrada.</p>
+    ${fld('esMotivo','Por que você quer o estorno?','',{area:1,max:300,ph:'Conte o motivo'})}
+    <button class="btn block" type="submit">Enviar pedido de estorno</button>
+    <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,'Solicitar estorno');
+};
+forms['pg-estorno']=async f=>{
+  await tk('nvd_membro_solicitar_estorno',{p_pagamento_id:f.dataset.id,p_motivo:val('esMotivo')});
+  fecharSheet();toast('Pedido enviado. A resposta aparece aqui.','ok');tabsMembro.pagtos();
 };
 acoes['comp-escolher']=()=>{const i=$('#fComp');if(i)i.click()};
 acoes['comp-remover']=()=>{limparPrevia();desenharEscolha()};
@@ -924,19 +979,23 @@ tabsParceiro.conta=()=>{
 /* =====================================================================
    ADMIN: pagamentos (Pix manual), membros, parceiros, planos, acessos
    ===================================================================== */
-const ADMIN_TABS=[['painel','Painel','grid'],['pagtos','Pagamentos','dollar'],['membros','Membros','users'],['parceiros','Parceiros','store'],['planos','Planos','tag'],['usos','Usos','list'],['acessos','Acessos','shield'],['config','Config','sliders'],['conta','Conta','user']];
+const ADMIN_TABS=[['painel','Painel','grid'],['pagtos','Pagamentos','dollar'],['comps','Comprovantes','paperclip'],['membros','Membros','users'],['parceiros','Parceiros','store'],['planos','Planos','tag'],['usos','Usos','list'],['acessos','Acessos','shield'],['config','Config','sliders'],['conta','Conta','user']];
 const tabsAdmin={};
 const METODOS={pix_manual:'Pix manual',pix:'Pix',cartao:'Cartão',boleto:'Boleto',cortesia:'Cortesia'};
 const CATS=['Restaurante','Bar','Pizzaria','Hamburgueria','Cafeteria','Padaria','Sorveteria','Japonês','Churrascaria','Doceria','Academia','Estética','Saúde','Lazer','Serviços','Outros'];
 function renderAdmin(){
   $('#app').innerHTML=`<div class="app"><header class="top">${marca('Administração')}<div class="grow"></div><button type="button" class="ib" data-act="tema" aria-label="Alternar tema">${ic('sun')}</button></header>
-    <nav class="atabs" id="atabs">${ADMIN_TABS.map(([k,t,i])=>`<button type="button" class="atab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span>${k==='pagtos'?'<span class="n" id="nPend" hidden></span>':''}</button>`).join('')}</nav>
+    <nav class="atabs" id="atabs">${ADMIN_TABS.map(([k,t,i])=>`<button type="button" class="atab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span>${k==='pagtos'?'<span class="n" id="nEst" hidden></span>':k==='comps'?'<span class="n" id="nComp" hidden></span>':''}</button>`).join('')}</nav>
     <main class="view" id="view"></main></div>`;
   irTab(S.tab&&ADMIN_TABS.some(t=>t[0]===S.tab)?S.tab:'painel');
   atualizarPendentes();
 }
+// selos do menu: Comprovantes = a conferir; Pagamentos = pedidos de estorno esperando decisão
 async function atualizarPendentes(){
-  try{const p=await tk('nvd_admin_painel'),n=$('#nPend');if(n){n.textContent=p.pendentes;n.hidden=!(p.pendentes>0)}}catch(e){}
+  try{
+    const p=await tk('nvd_admin_painel'),set=(id,n)=>{const e=$('#'+id);if(e){e.textContent=n;e.hidden=!(n>0)}};
+    set('nEst',p.estornos_pendentes);set('nComp',p.pendentes_com_comprovante);
+  }catch(e){}
 }
 function statusMembro(m){
   if(m.bloqueado)return ['bad','Bloqueado'];
@@ -953,7 +1012,10 @@ tabsAdmin.painel=async()=>{
     <div class="kpi"><small>Membros ativos</small><b>${p.membros_ativos}</b></div>
     <div class="kpi"><small>Vencendo em 7 dias</small><b>${p.vencendo_7d}</b></div>
     <button type="button" class="kpi ${p.pendentes?'hot':''}" data-act="tab" data-t="pagtos" style="font:inherit;color:inherit;text-align:left;cursor:pointer"><small>Pagamentos a confirmar</small><b>${p.pendentes}</b></button>
+    <button type="button" class="kpi ${p.pendentes_com_comprovante?'hot':''}" data-act="tab" data-t="comps" style="font:inherit;color:inherit;text-align:left;cursor:pointer"><small>Comprovantes a conferir</small><b>${p.pendentes_com_comprovante}</b></button>
+    <button type="button" class="kpi ${p.estornos_pendentes?'hot':''}" data-act="ir-estornos" style="font:inherit;color:inherit;text-align:left;cursor:pointer"><small>Estornos a decidir</small><b>${p.estornos_pendentes}</b></button>
     <div class="kpi"><small>Receita confirmada no mês</small><b>${brl(p.receita_mes_centavos)}</b></div>
+    <div class="kpi"><small>Devolvido no mês</small><b>${brl(p.devolvido_mes_centavos)}</b></div>
     <div class="kpi"><small>Usos no mês</small><b>${p.usos_mes}</b></div>
     <div class="kpi"><small>Parceiros ativos</small><b>${p.parceiros_ativos}</b></div></div>
     <section class="card"><h3>Parceiros mais usados no mês</h3>${p.top_parceiros.length?`<div class="list">${p.top_parceiros.map((t,i)=>`<div class="row"><div class="logo">${i+1}º</div><div class="grow"><b>${esc(t.nome)}</b></div><b>${t.usos}</b></div>`).join('')}</div>`:'<p class="muted">Ainda sem usos neste mês.</p>'}</section>
@@ -961,47 +1023,186 @@ tabsAdmin.painel=async()=>{
 };
 
 /* --- pagamentos --- */
-S.pagFiltro='pendente';
+S.pagFiltro='pendente';S.compFiltro='conferir';S.pg=new Map();S.arq=new Map();
+const ST_PG={pendente:['warn','Pendente'],pago:['ok','Pago'],cancelado:['mut','Cancelado'],devolvido:['info','Devolvido']};
+const guardarPg=lista=>lista.forEach(g=>S.pg.set(g.id,g));
+const telaLarga=()=>window.matchMedia('(min-width:900px)').matches;
+function recarregarAdmin(){
+  if(S.tab==='pagtos')tabsAdmin.pagtos();else if(S.tab==='comps')tabsAdmin.comps();
+  atualizarPendentes();
+}
+
+// o que aconteceu com este pagamento além de pago/pendente: cancelamento, recusa de comprovante, estorno, devolução
+function detalhesPg(g){
+  const l=[];
+  if(g.status==='cancelado')l.push(`Cancelado ${g.cancelado_por==='admin'?'pelo administrador':g.cancelado_por==='cliente'?'pelo cliente':''}${g.cancelado_em?' em '+esc(dth(g.cancelado_em)):''}${g.cancelado_motivo?': “'+esc(g.cancelado_motivo)+'”':''}`);
+  if(g.status==='pendente'&&g.comprovante_recusa_motivo)l.push(`<span style="color:var(--red)">Comprovante recusado: ${esc(g.comprovante_recusa_motivo)}. Aguardando novo envio.</span>`);
+  if(g.estorno_status==='solicitado')l.push(`<span style="color:var(--blue)"><b style="display:inline">Estorno solicitado</b> ${esc(ha(g.estorno_solicitado_em))}: “${esc(g.estorno_motivo||'')}”</span>`);
+  if(g.estorno_status==='recusado')l.push(`Estorno recusado${g.estorno_resposta?': “'+esc(g.estorno_resposta)+'”':''}`);
+  if(g.status==='devolvido')l.push(`Devolvido <b style="display:inline">${brl(g.devolvido_valor_centavos)}</b> em ${esc(dth(g.devolvido_em))}${g.devolucao_removeu_dias?' · dias removidos da carteirinha':''}${g.devolucao_obs?' · “'+esc(g.devolucao_obs)+'”':''}`);
+  return l.map(t=>`<small>${t}</small>`).join('');
+}
+// botões de ação conforme o estado do pagamento (mesmos na lista e no visualizador)
+function botoesPg(g){
+  const b=[],id=esc(g.id);
+  if(g.status==='pendente'){
+    b.push(`<button type="button" class="btn ok sm fit" data-act="pag-confirmar" data-id="${id}">${ic('check')} Confirmar recebimento</button>`);
+    if(g.comprovante_nome&&!g.comprovante_recusa_motivo)b.push(`<button type="button" class="btn sec sm" data-act="comp-recusar" data-id="${id}">Pedir outro comprovante</button>`);
+    b.push(`<button type="button" class="btn danger sm" data-act="pag-cancelar" data-id="${id}">Cancelar</button>`);
+  }
+  if(g.status==='pago'||g.estorno_status==='solicitado')b.push(`<button type="button" class="btn ${g.estorno_status==='solicitado'?'ok':'sec'} sm" data-act="pag-devolver" data-id="${id}">${ic('refresh')} Devolver</button>`);
+  if(g.estorno_status==='solicitado')b.push(`<button type="button" class="btn danger sm" data-act="est-recusar" data-id="${id}">Recusar estorno</button>`);
+  return b.join('');
+}
+
+/* --- pagamentos --- */
 tabsAdmin.pagtos=async()=>{
   const v=$('#view');v.innerHTML=skl();
   let r;try{r=await tk('nvd_admin_pagamentos',{p_status:S.pagFiltro})}catch(e){return erroView(v,e)}
-  const F=[['pendente','Pendentes'],['pago','Pagos'],['cancelado','Cancelados'],['todos','Todos']];
-  const ST={pendente:['warn','Pendente'],pago:['ok','Pago'],cancelado:['mut','Cancelado']};
+  if(S.tab!=='pagtos')return;
+  guardarPg(r.pagamentos);
+  const F=[['pendente','Pendentes'],['pago','Pagos'],['estorno','Estornos'],['devolvido','Devolvidos'],['cancelado','Cancelados'],['todos','Todos']];
   v.innerHTML=`<div class="fchips">${F.map(([k,t])=>`<button type="button" class="fchip ${S.pagFiltro===k?'on':''}" data-act="pag-filtro" data-v="${k}">${t}</button>`).join('')}</div>
-    <div class="list">${r.pagamentos.length?r.pagamentos.map(g=>{const s=ST[g.status]||['mut',g.status];return `<div class="row" style="flex-wrap:wrap;align-items:flex-start">
+    <div class="list">${r.pagamentos.length?r.pagamentos.map(g=>{const s=ST_PG[g.status]||['mut',g.status],bt=botoesPg(g);return `<div class="row" style="flex-wrap:wrap;align-items:flex-start">
       <div class="grow"><b>${esc(g.membro_nome)}</b><small>${esc(fmtCod(g.membro_codigo))} · ${esc(g.membro_email)}${g.membro_telefone?' · '+esc(g.membro_telefone):''}</small>
       <small>${esc(g.plano_nome)} · <b style="display:inline">${brl(g.valor_centavos)}</b> · ${esc(g.referencia)} · ${esc(METODOS[g.metodo]||g.metodo)}</small>
       ${g.status==='pendente'?(g.informado_em?`<small style="color:var(--amber)">Avisou que pagou ${esc(ha(g.informado_em))}</small>`:`<small>Ainda não avisou o pagamento · criado ${esc(ha(g.criado_em))}</small>`):`<small>${esc(dth(g.pago_em||g.criado_em))}</small>`}
       ${g.comprovante_nome?`<small style="color:var(--green)">${ic('paperclip','sm')} Comprovante anexado (${esc(tamTxt(g.comprovante_tamanho))})</small>`:(g.status==='pendente'?'<small>Sem comprovante anexado</small>':'')}
-      ${g.observacao?`<small>“${esc(g.observacao)}”</small>`:''}</div>
+      ${detalhesPg(g)}${g.observacao?`<small>“${esc(g.observacao)}”</small>`:''}</div>
       <div class="end"><span class="pill ${s[0]}">${s[1]}</span></div>
-      ${(g.comprovante_nome||g.status==='pendente')?`<div style="display:flex;gap:8px;width:100%;margin-top:6px;flex-wrap:wrap">
-        ${g.comprovante_nome?`<button type="button" class="btn sec sm" data-act="comp-ver" data-id="${esc(g.id)}" data-n="${esc(g.membro_nome)}" data-v="${g.valor_centavos}" data-s="${esc(g.status)}">${ic('eye')} Ver comprovante</button>`:''}
-        ${g.status==='pendente'?`<button type="button" class="btn ok sm grow" data-act="pag-confirmar" data-id="${esc(g.id)}" data-n="${esc(g.membro_nome)}" data-v="${g.valor_centavos}">${ic('check')} Confirmar recebimento</button><button type="button" class="btn danger sm" data-act="pag-cancelar" data-id="${esc(g.id)}">Cancelar</button>`:''}</div>`:''}</div>`}).join('')
+      ${(g.comprovante_nome||bt)?`<div style="display:flex;gap:8px;width:100%;margin-top:6px;flex-wrap:wrap">${g.comprovante_nome?`<button type="button" class="btn sec sm" data-act="comp-ver" data-id="${esc(g.id)}">${ic('eye')} Ver comprovante</button>`:''}${bt}</div>`:''}</div>`}).join('')
     :vazio('dollar','Nenhum pagamento neste filtro.')}</div>`;
 };
 acoes['pag-filtro']=el=>{S.pagFiltro=el.dataset.v;tabsAdmin.pagtos()};
+acoes['ir-estornos']=()=>{S.pagFiltro='estorno';irTab('pagtos')};
 acoes['pag-confirmar']=async el=>{
-  if(!confirm(`Confirmar o recebimento de ${brl(Number(el.dataset.v))} de ${el.dataset.n}? A carteirinha será liberada agora.`))return;
-  await tk('nvd_admin_pagamento_confirmar',{p_id:el.dataset.id});
-  fecharSheet();toast('Pagamento confirmado. Carteirinha liberada.','ok');tabsAdmin.pagtos();atualizarPendentes();
+  const g=S.pg.get(el.dataset.id);if(!g)return;
+  if(!confirm(`Confirmar o recebimento de ${brl(g.valor_centavos)} de ${g.membro_nome}? A carteirinha será liberada agora.`))return;
+  await tk('nvd_admin_pagamento_confirmar',{p_id:g.id});
+  fecharSheet();toast('Pagamento confirmado. Carteirinha liberada.','ok');recarregarAdmin();
 };
-// abre o comprovante por um link temporário (2 min): o arquivo fica num bucket privado, nunca tem URL pública
-acoes['comp-ver']=async el=>{
-  abrirSheet(skl(),'Comprovante');
-  let r;try{r=await fnComprovante({acao:'ver',pagamento_id:el.dataset.id})}catch(e){fecharSheet();throw e}
-  const img=/^image\//.test(r.tipo);
-  sheetCorpo(`<div class="stack viewer">
-    <p class="muted" style="font-size:.86rem"><b>${esc(el.dataset.n)}</b> · ${brl(Number(el.dataset.v))}<br>${esc(r.nome)} · ${esc(tamTxt(r.tamanho))} · enviado ${esc(dth(r.em))}</p>
-    ${img?`<img src="${esc(r.url)}" alt="Comprovante de pagamento" referrerpolicy="no-referrer">`
-      :`<div class="filebox"><div class="th">${ic('file')}</div><div class="grow"><b>Comprovante em PDF</b><small>Abre em uma nova aba</small></div></div>`}
-    <a class="btn sec block" target="_blank" rel="noopener noreferrer" href="${esc(r.url)}">${ic('eye')} ${img?'Abrir imagem em nova aba':'Abrir PDF'}</a>
-    ${el.dataset.s==='pendente'?`<button type="button" class="btn ok block" data-act="pag-confirmar" data-id="${esc(el.dataset.id)}" data-n="${esc(el.dataset.n)}" data-v="${esc(el.dataset.v)}">${ic('check')} Confirmar recebimento</button>`:''}
-    <small>O link deste comprovante expira em 2 minutos.</small></div>`);
+
+/* --- ações sobre um pagamento: cancelar, pedir outro comprovante, devolver, recusar estorno --- */
+acoes['pag-cancelar']=el=>{
+  const g=S.pg.get(el.dataset.id);if(!g)return;
+  abrirSheet(`<form data-form="pag-cancelar-adm" data-id="${esc(g.id)}" class="stack">
+    <p class="muted">Cancelar a cobrança de <b>${brl(g.valor_centavos)}</b> de ${esc(g.membro_nome)} (${esc(g.referencia)})?</p>
+    ${fld('cmMotivo','Motivo (o cliente vê)','',{area:1,max:300,ph:'Ex.: Pix não identificado na conta'})}
+    <button class="btn danger block" type="submit">Cancelar cobrança</button>
+    <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,'Cancelar cobrança');
 };
-acoes['pag-cancelar']=async el=>{
-  if(!confirm('Cancelar esta cobrança pendente?'))return;
-  await tk('nvd_admin_pagamento_cancelar',{p_id:el.dataset.id});toast('Cobrança cancelada.','ok');tabsAdmin.pagtos();atualizarPendentes();
+forms['pag-cancelar-adm']=async f=>{
+  await tk('nvd_admin_pagamento_cancelar',{p_id:f.dataset.id,p_motivo:val('cmMotivo')});
+  fecharSheet();toast('Cobrança cancelada.','ok');recarregarAdmin();
+};
+acoes['comp-recusar']=el=>{
+  const g=S.pg.get(el.dataset.id);if(!g)return;
+  abrirSheet(`<form data-form="comp-recusar-ok" data-id="${esc(g.id)}" class="stack">
+    <p class="muted">A cobrança de ${esc(g.membro_nome)} continua pendente. O cliente vê o motivo e envia outro comprovante.</p>
+    ${fld('crMotivo','Motivo da recusa (o cliente vê)','',{area:1,max:300,ph:'Ex.: Não aparece o valor do Pix'})}
+    <button class="btn block" type="submit">Pedir outro comprovante</button>
+    <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,'Pedir outro comprovante');
+};
+forms['comp-recusar-ok']=async f=>{
+  await tk('nvd_admin_comprovante_recusar',{p_pagamento_id:f.dataset.id,p_motivo:val('crMotivo')});
+  fecharSheet();toast('Pedido enviado ao cliente.','ok');recarregarAdmin();
+};
+// o Pix de volta é feito no app do banco; aqui só fica o registro (valor, observação e, se marcado, os dias removidos da carteirinha)
+acoes['pag-devolver']=el=>{
+  const g=S.pg.get(el.dataset.id);if(!g)return;
+  abrirSheet(`<form data-form="pag-devolver-ok" data-id="${esc(g.id)}" class="stack">
+    <div class="banner info" style="margin:0">${ic('alert')}<span>Faça o Pix de devolução no app do seu banco. Aqui você só <b>registra</b> a devolução.</span></div>
+    <p class="muted"><b>${esc(g.membro_nome)}</b> · ${esc(g.plano_nome)} · ${brl(g.valor_centavos)} (${esc(g.referencia)})${g.estorno_status==='solicitado'?`<br>Pedido do cliente: “${esc(g.estorno_motivo||'')}”`:''}</p>
+    ${fld('dvValor','Valor devolvido (R$)',(g.valor_centavos/100).toFixed(2).replace('.',','),{mode:'decimal'})}
+    ${g.status==='pago'?`<div class="field chk"><input type="checkbox" id="dvDias" checked><label for="dvDias">Remover da carteirinha os ${g.periodo_dias} dias que este pagamento liberou (se não sobrar plano, ela é encerrada agora)</label></div>`:''}
+    ${fld('dvObs','Observação (opcional)','',{area:1,max:300,ph:'Ex.: identificador do Pix da devolução'})}
+    <button class="btn block" type="submit">Registrar devolução</button>
+    <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,'Registrar devolução');
+};
+forms['pag-devolver-ok']=async f=>{
+  const g=S.pg.get(f.dataset.id),v=parseValor(val('dvValor'));
+  if(v==null||Number.isNaN(v)||v<=0)return toast('Informe o valor devolvido.','erro');
+  const cent=Math.round(v*100);
+  if(!confirm(`Registrar a devolução de ${brl(cent)} para ${g.membro_nome}? Não dá pra desfazer.`))return;
+  const chk=document.getElementById('dvDias');
+  await tk('nvd_admin_pagamento_devolver',{p_pagamento_id:g.id,p_valor_centavos:cent,p_obs:val('dvObs'),p_remover_dias:!!(chk&&chk.checked)});
+  fecharSheet();toast('Devolução registrada.','ok');recarregarAdmin();
+};
+acoes['est-recusar']=el=>{
+  const g=S.pg.get(el.dataset.id);if(!g)return;
+  abrirSheet(`<form data-form="est-recusar-ok" data-id="${esc(g.id)}" class="stack">
+    <p class="muted"><b>${esc(g.membro_nome)}</b> pediu estorno de ${brl(g.valor_centavos)}: “${esc(g.estorno_motivo||'')}”</p>
+    ${fld('erMotivo','Motivo da recusa (o cliente vê)','',{area:1,max:300,ph:'Ex.: Pix não identificado na conta'})}
+    <button class="btn danger block" type="submit">Recusar estorno</button>
+    <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,'Recusar estorno');
+};
+forms['est-recusar-ok']=async f=>{
+  await tk('nvd_admin_estorno_recusar',{p_pagamento_id:f.dataset.id,p_motivo:val('erMotivo')});
+  fecharSheet();toast('Estorno recusado. O cliente vê o motivo.','ok');recarregarAdmin();
+};
+
+/* --- Comprovantes: fila de conferência com visualizador e download --- */
+const TIPOS_ARQ=['image/jpeg','image/png','image/webp','application/pdf'];
+const EXT_ARQ={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','application/pdf':'pdf'};
+function limparArquivos(){S.arq.forEach(o=>{if(o.viaBlob)URL.revokeObjectURL(o.blobUrl)});S.arq.clear()}
+// baixa o arquivo uma vez e serve de um blob local: ver, abrir e baixar funcionam mesmo depois do link temporário (2 min) expirar
+async function arquivoComprovante(id){
+  if(S.arq.has(id))return S.arq.get(id);
+  const r=await fnComprovante({acao:'ver',pagamento_id:id});
+  // só tipos da lista branca viram blob: um tipo inesperado (ex.: text/html) executaria script na origem do app
+  if(!TIPOS_ARQ.includes(r.tipo))throw new Error('Tipo de arquivo não suportado.');
+  let blobUrl=r.url,viaBlob=false;
+  try{const resp=await fetch(r.url);if(resp.ok){blobUrl=URL.createObjectURL(new Blob([await resp.arrayBuffer()],{type:r.tipo}));viaBlob=true}}catch(e){}
+  const o={...r,blobUrl,viaBlob};S.arq.set(id,o);return o;
+}
+function viewerHtml(g,a){
+  const img=/^image\//.test(a.tipo),nomeArq=`comprovante-${g.referencia}.${EXT_ARQ[a.tipo]}`;
+  const pdfInline=a.tipo==='application/pdf'&&a.viaBlob&&navigator.pdfViewerEnabled;
+  const s=ST_PG[g.status]||['mut',g.status],bt=botoesPg(g),u=esc(a.blobUrl);
+  return `<div class="viewer stack">
+    <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap"><div class="grow"><b style="font-size:1.05rem">${esc(g.membro_nome)}</b><small>${esc(fmtCod(g.membro_codigo))} · ${esc(g.membro_email)}${g.membro_telefone?' · '+esc(g.membro_telefone):''}</small>
+      <small>${esc(g.plano_nome)} · <b style="display:inline">${brl(g.valor_centavos)}</b> · ${esc(g.referencia)}</small></div><span class="pill ${s[0]}">${s[1]}</span></div>
+    ${img?`<a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="Comprovante de pagamento" referrerpolicy="no-referrer"></a>`
+      :pdfInline?`<iframe class="pdf" src="${u}" title="Comprovante em PDF"></iframe>`
+      :`<div class="filebox"><div class="th">${ic('file')}</div><div class="grow"><b>Comprovante em PDF</b><small>Este navegador não mostra PDF aqui. Use Baixar ou Abrir.</small></div></div>`}
+    <div class="grid2"><a class="btn sec" href="${u}" download="${esc(nomeArq)}">${ic('download')} Baixar</a><a class="btn sec" href="${u}" target="_blank" rel="noopener noreferrer">${ic('eye')} Abrir</a></div>
+    <small>${esc(a.nome)} · ${esc(tamTxt(a.tamanho))} · enviado ${esc(dth(a.em))}${g.informado_em?' · cliente avisou '+esc(ha(g.informado_em)):''}${a.viaBlob?'':' · link temporário de 2 min'}</small>
+    ${detalhesPg(g)}
+    ${bt?`<div style="display:flex;gap:8px;flex-wrap:wrap">${bt}</div>`:''}</div>`;
+}
+// no computador (Comprovantes) o visualizador fica ao lado da lista; no celular e a partir da aba Pagamentos abre numa janela
+async function abrirViewer(id,noPainel){
+  const g=S.pg.get(id);if(!g)return;
+  const pane=noPainel&&telaLarga()?$('#cPane'):null;
+  if(pane)pane.innerHTML=skl();else abrirSheet(skl(),'Comprovante');
+  let a;
+  try{a=await arquivoComprovante(id)}
+  catch(e){if(pane){pane.innerHTML=`<div class="banner bad">${ic('alert')}<span>${esc(e.message)}</span></div>`;return}fecharSheet();throw e}
+  const h=viewerHtml(g,a);
+  if(pane){if(S.compSel===id)pane.innerHTML=h}else if($('#sheetB'))sheetCorpo(h);
+}
+acoes['comp-ver']=el=>abrirViewer(el.dataset.id,false);
+acoes['comp-abrir']=el=>{
+  S.compSel=el.dataset.id;
+  $$('#cList .row').forEach(r=>r.classList.toggle('sel',r.dataset.id===el.dataset.id));
+  return abrirViewer(el.dataset.id,true);
+};
+acoes['comp-filtro']=el=>{S.compFiltro=el.dataset.v;tabsAdmin.comps()};
+tabsAdmin.comps=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_admin_comprovantes',{p_filtro:S.compFiltro})}catch(e){return erroView(v,e)}
+  if(S.tab!=='comps')return;
+  guardarPg(r.pagamentos);S.compSel=null;
+  const F=[['conferir','A conferir'],['confirmados','Confirmados'],['todos','Todos']];
+  v.innerHTML=`<div class="fchips">${F.map(([k,t])=>`<button type="button" class="fchip ${S.compFiltro===k?'on':''}" data-act="comp-filtro" data-v="${k}">${t}</button>`).join('')}</div>
+    <div class="split"><div class="list" id="cList">${r.pagamentos.length?r.pagamentos.map(g=>{const s=ST_PG[g.status]||['mut',g.status];return `<button type="button" class="row" data-act="comp-abrir" data-id="${esc(g.id)}">
+      <div class="logo">${ic(/^image\//.test(g.comprovante_tipo)?'paperclip':'file')}</div>
+      <div class="grow"><b>${esc(g.membro_nome)}</b><small>${esc(g.plano_nome)} · ${brl(g.valor_centavos)} · ${esc(g.referencia)}</small><small>Enviado ${esc(ha(g.comprovante_em))}${g.comprovante_recusa_motivo?' · <span style="color:var(--red)">recusado</span>':''}</small></div>
+      <span class="pill ${s[0]}">${s[1]}</span></button>`}).join('')
+      :vazio('paperclip',S.compFiltro==='conferir'?'Nenhum comprovante para conferir agora.':'Nenhum comprovante neste filtro.')}</div>
+      <div class="pane" id="cPane"><div class="empty">${ic('eye')}<p>Selecione um comprovante para visualizar.</p></div></div></div>`;
+  // no computador já abre o primeiro da fila: conferir vira "olhar, confirmar, próximo"
+  const primeiro=$('#cList .row');if(primeiro&&telaLarga())primeiro.click();
 };
 
 /* --- membros --- */

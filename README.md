@@ -28,7 +28,7 @@ Totalmente isolado do Portal:
 - Login próprio (`nvd.usuarios` + `nvd.sessoes`, senha com bcrypt, só o hash do token é guardado). Não usa Supabase Auth.
 - Limites anti-abuso (login, cadastro, validação) em `nvd.tentativas`.
 - Edge Function `nvd-comprovante` (fonte em `supabase/functions/nvd-comprovante/index.ts`, publicada com `verify_jwt=false` porque o login é próprio): recebe e serve os comprovantes. Detalhes abaixo.
-- O SQL está no histórico de migrações do projeto: `nvd_card_01` a `nvd_card_08` (Dashboard → Database → Migrations, ou `supabase db pull`).
+- O SQL está no histórico de migrações do projeto: `nvd_card_01` a `nvd_card_09` (Dashboard → Database → Migrations, ou `supabase db pull`).
 
 ## Pagamento
 
@@ -40,9 +40,21 @@ Aba **Pagamentos** do cliente: passo 1 pagar (chave, identificador), passo 2 ane
 
 - Guardado no bucket **privado** `nvd-comprovantes`, sem nenhuma policy: não existe URL pública. Só a Edge Function (chave de serviço) lê e grava.
 - O upload passa pela Edge Function, que confere o tipo pelos primeiros bytes do arquivo (não pelo nome), limita o tamanho e valida a sessão no banco (`nvd_comprovante_preparar` / `nvd_comprovante_registrar`, executáveis só pelo `service_role`).
-- O admin abre o comprovante por um link temporário de 2 minutos (`Ver comprovante`).
+- O admin confere na aba **Comprovantes**: fila "A conferir" (mais antigo primeiro), visualizador de imagem e de PDF, botões **Baixar** e **Abrir**, e as ações Confirmar, Pedir outro comprovante e Cancelar. No computador o visualizador fica ao lado da lista; no celular abre em uma janela. O arquivo é baixado uma vez para a memória do navegador (link temporário de 2 minutos) e só tipos da lista branca (JPG, PNG, WEBP, PDF) viram visualização.
+- "Pedir outro comprovante" mantém a cobrança pendente e mostra o motivo ao cliente, que reenvia; o reenvio limpa a recusa.
 - Excluir um membro pelo painel apaga os arquivos dele antes da conta. A RPC `nvd_admin_membro_excluir` recusa excluir se ainda houver comprovante guardado, então não sobra arquivo órfão.
 - Os comprovantes ficam guardados por tempo indeterminado (vale como registro contábil). Definir uma política de retenção é uma decisão pendente.
+
+## Cancelamento, estorno e devolução
+
+Estados do pagamento: `pendente`, `pago`, `cancelado`, `devolvido`.
+
+- **Cliente cancela** uma cobrança pendente (aba Pagamentos). Se ainda não avisou que pagou, é um cancelamento simples. Se já avisou (ou anexou comprovante), o Pix pode ter chegado: o cancelamento vira automaticamente um pedido de estorno para o admin conferir.
+- **Cliente pede estorno** de um pagamento confirmado, com motivo (mínimo 5 caracteres). Um pedido por pagamento; depois de recusado, só pelo suporte.
+- **Admin devolve** (aba Pagamentos: filtros Estornos e Devolvidos): registra valor (total ou parcial, nunca acima do pago), observação (ex.: ID do Pix da devolução) e, se marcado, **remove da carteirinha os dias que aquele pagamento liberou** (se não sobrar plano, ela é encerrada na hora). **O Pix de devolução é feito no app do banco; o sistema só registra.**
+- **Admin recusa** um estorno com motivo, que o cliente lê.
+- Um pagamento devolvido ou cancelado nunca volta a liberar carteirinha (`nvd.aplicar_pagamento` recusa).
+- Cancelar com motivo também vale para o admin; o cliente vê quem cancelou e por quê.
 
 ## Rodar local
 
@@ -70,3 +82,5 @@ Qualquer hospedagem estática com HTTPS (GitHub Pages, por exemplo). Publicar a 
 - Leitura de QR pela câmera testada apenas por simulação; falta validar em celular real (Android e iPhone).
 - Anexo de comprovante: envio, troca, visualização e exclusão foram testados com PNG e PDF pequenos. A compressão de foto grande e a conversão de HEIC (feitas no aparelho, via canvas) não foram testadas em celular real.
 - Política de retenção dos comprovantes (por quanto tempo guardar).
+- Regras de estorno: o sistema deixa o cliente pedir a qualquer momento e o admin decide. Vale conferir com contador ou advogado se há prazo ou condição a aplicar (por exemplo, o direito de arrependimento em compras feitas fora do estabelecimento) e, se houver, transformar em regra automática.
+- Devolução hoje é só registro: o Pix de volta é manual. Um gateway de pagamento futuro poderia fazer o estorno automático.
