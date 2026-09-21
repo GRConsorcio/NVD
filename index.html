@@ -64,7 +64,7 @@ body[data-role=admin] .app{max-width:1080px;padding-bottom:48px}
 .head h2{font-size:1.2rem}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--s1);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom)}
 .tabbar-in{max-width:520px;margin:0 auto;display:flex}
-.tab{flex:1;background:none;border:0;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.7rem;font-weight:600;color:var(--muted2)}
+.tab{flex:1;min-width:0;padding:0 2px;background:none;border:0;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.7rem;font-weight:600;color:var(--muted2)}
 .tab.on{color:var(--goldtext)}
 .atabs{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none}
 .atabs::-webkit-scrollbar{display:none}
@@ -168,6 +168,22 @@ button.row:hover{border-color:var(--border2)}
 .pay-amt{text-align:center;padding:8px 0 14px}
 .pay-amt strong{font-size:2rem;display:block}
 
+/* ===== comprovante do Pix ===== */
+.ic.sm{width:14px;height:14px;vertical-align:-2px}
+.stepn{display:flex;align-items:center;gap:10px;margin:18px 0 10px}
+.stepn i{width:26px;height:26px;border-radius:50%;background:var(--gold);color:var(--on-gold);display:grid;place-items:center;font-style:normal;font-weight:800;font-size:.8rem;flex:none}
+.stepn b{font-size:.98rem}
+.drop{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;padding:22px 14px;border:2px dashed var(--border2);border-radius:16px;background:var(--s2);color:var(--muted);text-align:center;font-size:.9rem}
+.drop:hover,.drop:focus-visible{border-color:var(--gold)}
+.drop .ic{width:28px;height:28px;color:var(--goldtext)}
+.drop b{color:var(--text);font-size:1rem}
+.filebox{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border2);border-radius:14px;background:var(--s2)}
+.filebox .th{width:56px;height:56px;border-radius:10px;background:var(--s3);color:var(--goldtext);display:grid;place-items:center;overflow:hidden;flex:none}
+.filebox .th img{width:100%;height:100%;object-fit:cover}
+.spin{display:inline-block;width:16px;height:16px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.viewer img{width:100%;border-radius:12px;display:block;background:var(--s2)}
+
 /* ===== resultado da validação (parceiro) ===== */
 .res{border-width:2px}
 .res.ok{border-color:var(--green)}
@@ -244,6 +260,10 @@ button.row:hover{border-color:var(--border2)}
 <symbol id="i-refresh" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></symbol>
 <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
 <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
+<symbol id="i-paperclip" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
 </defs></svg>
 
 <div id="app"></div>
@@ -483,7 +503,7 @@ acoes.recarregar=()=>irTab(S.tab);
 /* =====================================================================
    CLIENTE
    ===================================================================== */
-const MEMBRO_TABS=[['cart','Carteirinha','card'],['parceiros','Parceiros','store'],['hist','Histórico','clock'],['conta','Conta','user']];
+const MEMBRO_TABS=[['cart','Carteirinha','card'],['parceiros','Parceiros','store'],['pagtos','Pagamentos','dollar'],['hist','Histórico','clock'],['conta','Conta','user']];
 function renderMembro(){
   $('#app').innerHTML=`<div class="app"><header class="top">${marca()}<div class="grow"></div><button type="button" class="ib" data-act="tema" aria-label="Alternar tema">${ic('sun')}</button></header><main class="view" id="view"></main></div>
   <nav class="tabbar"><div class="tabbar-in">${MEMBRO_TABS.map(([k,t,i])=>`<button type="button" class="tab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span></button>`).join('')}</div></nav>`;
@@ -519,7 +539,7 @@ function desenharCart(){
   const c=S.cart,v=$('#view'),ativa=cartAtiva(c);
   const st=c.bloqueado?['bad','BLOQUEADA']:ativa?['ok','ATIVA']:['warn',c.valido_ate?'VENCIDA':'INATIVA'];
   v.innerHTML=`${S.offline?`<div class="banner warn">${ic('alert')}<span>Sem conexão. A carteirinha continua funcionando, mas o status pode estar desatualizado.</span></div>`:''}
-  ${c.pendente?`<button type="button" class="banner info" data-act="ver-pgto">${ic('clock')}<span class="grow">Pagamento ${esc(c.pendente.referencia)} ${c.pendente.informado_em?'informado. Aguardando confirmação.':'pendente. Toque para ver como pagar.'}</span>${ic('chevron')}</button>`:''}
+  ${c.pendente?`<button type="button" class="banner info" data-act="ver-pgto">${ic('clock')}<span class="grow">Pagamento ${esc(c.pendente.referencia)} ${c.pendente.informado_em?'informado. Aguardando confirmação.':'pendente. Toque para pagar e anexar o comprovante.'}</span>${ic('chevron')}</button>`:''}
   <section class="wallet ${ativa?'':'off'}">
     <div class="w-top"><span class="w-brand">NVD CARD</span><span class="pill ${st[0]}">${st[1]}</span></div>
     <div class="w-name">${esc(c.nome)}</div>
@@ -569,27 +589,149 @@ acoes.planos=async()=>{
   sheetCorpo(planos.map(p=>`<button type="button" class="plan" data-act="plano" data-id="${esc(p.id)}"><div><b>${esc(p.nome)}</b><small>${esc(p.descricao)}</small></div><div class="pp"><strong>${brl(p.preco_centavos)}</strong><small>${esc(periodoTxt(p.periodo_dias))}</small></div></button>`).join('')
     +'<p class="muted" style="font-size:.82rem;margin-top:6px">O pagamento é feito por Pix. Assim que confirmarmos, a carteirinha é liberada.</p>');
 };
-async function mostrarPagamento(planoId){
-  const r=await tk('nvd_membro_criar_pagamento',{p_plano_id:planoId}),g=r.pagamento,px=r.pix||{};
-  if(!$('#sheet'))abrirSheet('','Pagamento');
-  sheetCorpo(`<div class="pay-amt"><small>${esc(g.plano_nome)}</small><strong>${brl(g.valor_centavos)}</strong></div>
+// escolheu o plano: cria (ou reabre) a cobrança e leva pra aba Pagamentos, onde acontece tudo (pagar e anexar o comprovante)
+acoes.plano=async el=>{
+  await tk('nvd_membro_criar_pagamento',{p_plano_id:el.dataset.id});
+  fecharSheet();irTab('pagtos');
+};
+acoes['ver-pgto']=()=>irTab('pagtos');
+acoes.paguei=async el=>{
+  await tk('nvd_membro_informar_pagamento',{p_pagamento_id:el.dataset.id});
+  toast('Aviso enviado! Liberamos assim que o pagamento for confirmado.','ok');tabsMembro.pagtos();
+};
+
+/* --- aba Pagamentos: pagar por Pix e anexar o comprovante (imagem ou PDF) --- */
+const FN_COMPROVANTE=SB_URL+'/functions/v1/nvd-comprovante';
+const COMP_MAX=5*1024*1024;
+const tamTxt=b=>b>=1048576?(b/1048576).toFixed(1).replace('.',',')+' MB':Math.max(1,Math.round((b||0)/1024))+' KB';
+const abertoPg=()=>S.pgto&&S.pgto.pagamentos.find(g=>g.status==='pendente');
+function limparPrevia(){if(S.compUrl){URL.revokeObjectURL(S.compUrl);S.compUrl=null}S.compArq=null}
+
+// upload por XHR (e não fetch) só pra mostrar o progresso: no 4G do restaurante o envio de uma foto demora
+function enviarArquivo(url,fd,onProg){
+  return new Promise((ok,falha)=>{
+    const x=new XMLHttpRequest();x.open('POST',url);x.setRequestHeader('apikey',SB_KEY);x.timeout=90000;
+    x.upload.onprogress=e=>{if(e.lengthComputable)onProg(Math.round(e.loaded/e.total*100))};
+    x.onload=()=>{let d=null;try{d=JSON.parse(x.responseText)}catch(e){}ok({status:x.status,dados:d})};
+    x.onerror=()=>falha(new Error('Sem conexão com a internet.'));
+    x.ontimeout=()=>falha(new Error('O envio demorou demais. Confira a internet e tente de novo.'));
+    x.send(fd);
+  });
+}
+// chamadas JSON da mesma Edge Function (ver comprovante, excluir membro com os arquivos)
+async function fnComprovante(body){
+  let res;
+  try{res=await fetch(FN_COMPROVANTE,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({token:S.token,...body})})}
+  catch(e){throw new Error('Sem conexão com a internet.')}
+  let d=null;try{d=await res.json()}catch(e){}
+  if(res.status===401)sessaoExpirou();
+  if(!res.ok||!d||d.ok!==true)throw new Error((d&&d.erro)||'Erro inesperado. Tente de novo.');
+  return d;
+}
+function comprimirImagem(f){
+  return new Promise(async(ok,falha)=>{
+    const t=setTimeout(()=>falha(new Error('tempo esgotado')),8000);
+    try{
+      const bmp=await createImageBitmap(f),fator=Math.min(1,1800/Math.max(bmp.width,bmp.height));
+      const cv=document.createElement('canvas');cv.width=Math.round(bmp.width*fator);cv.height=Math.round(bmp.height*fator);
+      const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(bmp,0,0,cv.width,cv.height);
+      cv.toBlob(b=>{clearTimeout(t);b?ok(b):falha(new Error('sem blob'))},'image/jpeg',0.85);
+    }catch(e){clearTimeout(t);falha(e)}
+  });
+}
+async function prepararArquivo(f){
+  const nome=f.name||'comprovante',tipo=(f.type||'').toLowerCase();
+  if(tipo==='application/pdf'||/\.pdf$/i.test(nome)){
+    if(f.size>COMP_MAX)throw new Error('O PDF passa de 5 MB. Envie um arquivo menor.');
+    return f;
+  }
+  if(!(/^image\//.test(tipo)||/\.(jpe?g|png|webp|heic|heif)$/i.test(nome)))throw new Error('Envie uma imagem (JPG ou PNG) ou um PDF.');
+  const direto=/^image\/(jpeg|png|webp)$/.test(tipo);
+  if(direto&&f.size<=1.5*1048576)return f;
+  // foto grande (ou HEIC do iPhone) é reduzida e vira JPEG aqui: sobe mais rápido e o admin abre em qualquer navegador
+  try{return new File([await comprimirImagem(f)],nome.replace(/\.[^.]+$/,'')+'.jpg',{type:'image/jpeg'})}
+  catch(e){
+    if(direto&&f.size<=COMP_MAX)return f;
+    throw new Error('Não deu pra ler essa imagem. Tente enviar em JPG, PNG ou PDF.');
+  }
+}
+function cardAberto(g,px){
+  return `<section class="card">
+    <span class="pill warn">EM ABERTO</span>
+    <div class="pay-amt"><small>${esc(g.plano)}</small><strong>${brl(g.valor_centavos)}</strong></div>
+    <div class="stepn" style="margin-top:0"><i>1</i><b>Pague por Pix</b></div>
     ${px.pix_chave?`<div class="kv"><span>Chave Pix</span><b>${esc(px.pix_chave)}</b><button type="button" class="ib" data-act="copiar" data-v="${esc(px.pix_chave)}" aria-label="Copiar chave Pix">${ic('copy')}</button></div>
       ${px.pix_favorecido?`<div class="kv"><span>Favorecido</span><b>${esc(px.pix_favorecido)}</b></div>`:''}`
       :`<div class="banner warn">${ic('alert')}<span>A chave Pix ainda não foi configurada. Fale com o suporte para pagar.</span></div>`}
     <div class="kv"><span>Identificador</span><b>${esc(g.referencia)}</b><button type="button" class="ib" data-act="copiar" data-v="${esc(g.referencia)}" aria-label="Copiar identificador">${ic('copy')}</button></div>
-    <p class="muted" style="font-size:.86rem;margin:14px 0">${esc(px.pix_instrucoes||'')}</p>
-    <div class="stack">
-      ${g.informado_em?`<div class="banner ok">${ic('check')}<span>Aviso enviado ${esc(ha(g.informado_em))}. Estamos conferindo o pagamento.</span></div>`
-        :`<button type="button" class="btn block" data-act="paguei" data-id="${esc(g.id)}">Já fiz o pagamento</button>`}
-      ${px.whatsapp?`<a class="btn sec block" target="_blank" rel="noopener" href="https://wa.me/${esc(px.whatsapp)}?text=${encodeURIComponent('Olá! Fiz o pagamento '+g.referencia+' do NVD CARD.')}">${ic('chat')} Enviar comprovante</a>`:''}
-    </div>`);
+    ${px.pix_instrucoes?`<p class="muted" style="font-size:.86rem;margin-top:12px">${esc(px.pix_instrucoes)}</p>`:''}
+    <div class="stepn"><i>2</i><b>Anexe o comprovante</b></div>
+    <input type="file" id="fComp" accept="image/*,application/pdf" hidden>
+    <div id="compArea"></div>
+    <div class="stack" style="margin-top:14px">
+      ${g.informado_em?`<div class="banner ok" style="margin:0">${ic('check')}<span>Pagamento informado ${esc(ha(g.informado_em))}. Estamos conferindo e liberamos a carteirinha em seguida.</span></div>`
+        :`<button type="button" class="btn sec block" data-act="paguei" data-id="${esc(g.id)}">Já paguei, envio o comprovante depois</button>`}
+      ${px.whatsapp?`<a class="btn sec block" target="_blank" rel="noopener" href="https://wa.me/${esc(px.whatsapp)}?text=${encodeURIComponent('Olá! Fiz o pagamento '+g.referencia+' do NVD CARD.')}">${ic('chat')} Falar com o suporte</a>`:''}
+    </div></section>`;
 }
-acoes.plano=el=>mostrarPagamento(el.dataset.id);
-acoes['ver-pgto']=()=>{abrirSheet(skl(),'Pagamento');return mostrarPagamento(S.cart.pendente.plano_id)};
-acoes.paguei=async el=>{
-  await tk('nvd_membro_informar_pagamento',{p_pagamento_id:el.dataset.id});
-  fecharSheet();toast('Aviso enviado! Liberamos assim que o pagamento for confirmado.','ok');
-  if(S.tab==='cart')tabsMembro.cart();
+// área do anexo: mostra o que já foi enviado, a prévia do arquivo escolhido ou o botão pra escolher
+function desenharEscolha(){
+  const area=$('#compArea'),g=abertoPg();if(!area||!g)return;
+  const f=S.compArq,c=g.comprovante;
+  if(f){
+    area.innerHTML=`<div class="filebox"><div class="th">${S.compUrl?`<img src="${esc(S.compUrl)}" alt="Prévia do comprovante">`:ic('file')}</div>
+      <div class="grow"><b style="overflow-wrap:anywhere">${esc(f.name)}</b><small>${esc(tamTxt(f.size))}</small></div>
+      <button type="button" class="ib" data-act="comp-remover" aria-label="Remover arquivo">${ic('x')}</button></div>
+      <button type="button" class="btn block" style="margin-top:12px" data-act="comp-enviar" data-id="${esc(g.id)}">${ic('upload')} Enviar comprovante</button>`;
+  }else if(c){
+    area.innerHTML=`<div class="filebox"><div class="th">${ic(/^image\//.test(c.tipo)?'paperclip':'file')}</div>
+      <div class="grow"><b>Comprovante enviado</b><small style="overflow-wrap:anywhere">${esc(c.nome)} · ${esc(tamTxt(c.tamanho))} · ${esc(ha(c.em))}</small></div></div>
+      <button type="button" class="btn sec sm" style="margin-top:10px" data-act="comp-escolher">${ic('upload')} Trocar arquivo</button>`;
+  }else{
+    area.innerHTML=`<button type="button" class="drop" data-act="comp-escolher">${ic('upload')}<b>Anexar comprovante</b><span>Foto, print ou PDF do Pix (até 5 MB)</span></button>`;
+  }
+}
+tabsMembro.pagtos=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_membro_pagamentos')}catch(e){return erroView(v,e)}
+  if(S.tab!=='pagtos')return;
+  limparPrevia();S.pgto=r;
+  const aberto=abertoPg(),ST={pendente:['warn','Pendente'],pago:['ok','Pago'],cancelado:['mut','Cancelado']};
+  const outros=r.pagamentos.filter(g=>g!==aberto);
+  v.innerHTML=`<div class="head"><h2>Pagamentos</h2></div>
+    ${aberto?cardAberto(aberto,r.pix||{}):`<section class="card" style="text-align:center"><p class="muted" style="margin-bottom:14px">Nenhum pagamento em aberto.</p><button type="button" class="btn" data-act="planos">${S.cart&&S.cart.valido_ate?'Renovar carteirinha':'Ativar carteirinha'}</button></section>`}
+    ${outros.length?`<div class="head" style="margin-top:22px"><h2>Histórico de pagamentos</h2></div><div class="list">${outros.map(g=>{const s=ST[g.status]||['mut',g.status];return `<div class="row"><div class="grow"><b>${esc(g.plano)}</b><small>${esc(g.referencia)} · ${esc(dt(g.pago_em||g.criado_em))}</small>${g.comprovante?`<small>${ic('paperclip','sm')} ${esc(g.comprovante.nome)}</small>`:''}</div><div class="end"><b>${brl(g.valor_centavos)}</b><span class="pill ${s[0]}">${s[1]}</span></div></div>`}).join('')}</div>`:''}`;
+  if(aberto)desenharEscolha();
+};
+acoes['comp-escolher']=()=>{const i=$('#fComp');if(i)i.click()};
+acoes['comp-remover']=()=>{limparPrevia();desenharEscolha()};
+document.addEventListener('change',async e=>{
+  if(e.target.id!=='fComp')return;
+  const f=e.target.files&&e.target.files[0];e.target.value=''; // limpa pra poder escolher o mesmo arquivo de novo
+  if(!f)return;
+  const area=$('#compArea');
+  if(area)area.innerHTML='<div class="filebox"><span class="spin"></span><div class="grow"><small>Preparando o arquivo…</small></div></div>';
+  limparPrevia();
+  try{
+    S.compArq=await prepararArquivo(f);
+    if(/^image\//.test(S.compArq.type))S.compUrl=URL.createObjectURL(S.compArq);
+  }catch(err){toast(err.message,'erro')}
+  desenharEscolha();
+});
+acoes['comp-enviar']=async el=>{
+  const f=S.compArq;if(!f)return toast('Escolha o arquivo do comprovante.','erro');
+  if(f.size>COMP_MAX)return toast('O arquivo passa de 5 MB.','erro');
+  const fd=new FormData();fd.append('token',S.token);fd.append('pagamento_id',el.dataset.id);fd.append('arquivo',f,f.name);
+  const rotulo=el.innerHTML,prog=n=>{el.innerHTML=`<span class="spin"></span> Enviando… ${n}%`};
+  el.disabled=true;prog(0);
+  try{
+    const {status,dados}=await enviarArquivo(FN_COMPROVANTE,fd,prog);
+    if(status===401){sessaoExpirou();return}
+    if(!dados||dados.ok!==true)throw new Error((dados&&dados.erro)||'Não foi possível enviar. Tente de novo.');
+    toast('Comprovante enviado! Vamos conferir o pagamento.','ok');
+    tabsMembro.pagtos();
+    carregarCart().catch(()=>{});
+  }catch(e){el.disabled=false;el.innerHTML=rotulo;throw e}
 };
 
 /* --- parceiros --- */
@@ -638,11 +780,8 @@ acoes['ir-cart']=()=>{fecharSheet();irTab('cart')};
 tabsMembro.hist=async()=>{
   const v=$('#view');v.innerHTML=skl();
   let h;try{h=await tk('nvd_membro_historico')}catch(e){return erroView(v,e)}
-  const ST={pendente:['warn','Pendente'],pago:['ok','Pago'],cancelado:['mut','Cancelado']};
   v.innerHTML=`<div class="head"><h2>Meus usos</h2></div>
-    <div class="list" style="margin-bottom:22px">${h.usos.length?h.usos.map(u=>`<div class="row"><div class="grow"><b>${esc(u.parceiro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}</small></div>${u.estornado?'<span class="pill mut">Estornado</span>':''}</div>`).join(''):vazio('clock','Você ainda não usou nenhum benefício.')}</div>
-    <div class="head"><h2>Pagamentos</h2></div>
-    <div class="list">${h.pagamentos.length?h.pagamentos.map(g=>{const s=ST[g.status]||['mut',g.status];return `<div class="row"><div class="grow"><b>${esc(g.plano)}</b><small>${esc(g.referencia)} · ${esc(dt(g.criado_em))}</small></div><div class="end"><b>${brl(g.valor_centavos)}</b><span class="pill ${s[0]}">${s[1]}</span></div></div>`}).join(''):vazio('dollar','Nenhum pagamento ainda.')}</div>`;
+    <div class="list">${h.usos.length?h.usos.map(u=>`<div class="row"><div class="grow"><b>${esc(u.parceiro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}</small></div>${u.estornado?'<span class="pill mut">Estornado</span>':''}</div>`).join(''):vazio('clock','Você ainda não usou nenhum benefício.')}</div>`;
 };
 tabsMembro.conta=()=>{$('#view').innerHTML=viewConta()};
 
@@ -833,16 +972,32 @@ tabsAdmin.pagtos=async()=>{
       <div class="grow"><b>${esc(g.membro_nome)}</b><small>${esc(fmtCod(g.membro_codigo))} · ${esc(g.membro_email)}${g.membro_telefone?' · '+esc(g.membro_telefone):''}</small>
       <small>${esc(g.plano_nome)} · <b style="display:inline">${brl(g.valor_centavos)}</b> · ${esc(g.referencia)} · ${esc(METODOS[g.metodo]||g.metodo)}</small>
       ${g.status==='pendente'?(g.informado_em?`<small style="color:var(--amber)">Avisou que pagou ${esc(ha(g.informado_em))}</small>`:`<small>Ainda não avisou o pagamento · criado ${esc(ha(g.criado_em))}</small>`):`<small>${esc(dth(g.pago_em||g.criado_em))}</small>`}
+      ${g.comprovante_nome?`<small style="color:var(--green)">${ic('paperclip','sm')} Comprovante anexado (${esc(tamTxt(g.comprovante_tamanho))})</small>`:(g.status==='pendente'?'<small>Sem comprovante anexado</small>':'')}
       ${g.observacao?`<small>“${esc(g.observacao)}”</small>`:''}</div>
       <div class="end"><span class="pill ${s[0]}">${s[1]}</span></div>
-      ${g.status==='pendente'?`<div style="display:flex;gap:8px;width:100%;margin-top:6px"><button type="button" class="btn ok sm grow" data-act="pag-confirmar" data-id="${esc(g.id)}" data-n="${esc(g.membro_nome)}" data-v="${g.valor_centavos}">${ic('check')} Confirmar recebimento</button><button type="button" class="btn danger sm" data-act="pag-cancelar" data-id="${esc(g.id)}">Cancelar</button></div>`:''}</div>`}).join('')
+      ${(g.comprovante_nome||g.status==='pendente')?`<div style="display:flex;gap:8px;width:100%;margin-top:6px;flex-wrap:wrap">
+        ${g.comprovante_nome?`<button type="button" class="btn sec sm" data-act="comp-ver" data-id="${esc(g.id)}" data-n="${esc(g.membro_nome)}" data-v="${g.valor_centavos}" data-s="${esc(g.status)}">${ic('eye')} Ver comprovante</button>`:''}
+        ${g.status==='pendente'?`<button type="button" class="btn ok sm grow" data-act="pag-confirmar" data-id="${esc(g.id)}" data-n="${esc(g.membro_nome)}" data-v="${g.valor_centavos}">${ic('check')} Confirmar recebimento</button><button type="button" class="btn danger sm" data-act="pag-cancelar" data-id="${esc(g.id)}">Cancelar</button>`:''}</div>`:''}</div>`}).join('')
     :vazio('dollar','Nenhum pagamento neste filtro.')}</div>`;
 };
 acoes['pag-filtro']=el=>{S.pagFiltro=el.dataset.v;tabsAdmin.pagtos()};
 acoes['pag-confirmar']=async el=>{
   if(!confirm(`Confirmar o recebimento de ${brl(Number(el.dataset.v))} de ${el.dataset.n}? A carteirinha será liberada agora.`))return;
   await tk('nvd_admin_pagamento_confirmar',{p_id:el.dataset.id});
-  toast('Pagamento confirmado. Carteirinha liberada.','ok');tabsAdmin.pagtos();atualizarPendentes();
+  fecharSheet();toast('Pagamento confirmado. Carteirinha liberada.','ok');tabsAdmin.pagtos();atualizarPendentes();
+};
+// abre o comprovante por um link temporário (2 min): o arquivo fica num bucket privado, nunca tem URL pública
+acoes['comp-ver']=async el=>{
+  abrirSheet(skl(),'Comprovante');
+  let r;try{r=await fnComprovante({acao:'ver',pagamento_id:el.dataset.id})}catch(e){fecharSheet();throw e}
+  const img=/^image\//.test(r.tipo);
+  sheetCorpo(`<div class="stack viewer">
+    <p class="muted" style="font-size:.86rem"><b>${esc(el.dataset.n)}</b> · ${brl(Number(el.dataset.v))}<br>${esc(r.nome)} · ${esc(tamTxt(r.tamanho))} · enviado ${esc(dth(r.em))}</p>
+    ${img?`<img src="${esc(r.url)}" alt="Comprovante de pagamento" referrerpolicy="no-referrer">`
+      :`<div class="filebox"><div class="th">${ic('file')}</div><div class="grow"><b>Comprovante em PDF</b><small>Abre em uma nova aba</small></div></div>`}
+    <a class="btn sec block" target="_blank" rel="noopener noreferrer" href="${esc(r.url)}">${ic('eye')} ${img?'Abrir imagem em nova aba':'Abrir PDF'}</a>
+    ${el.dataset.s==='pendente'?`<button type="button" class="btn ok block" data-act="pag-confirmar" data-id="${esc(el.dataset.id)}" data-n="${esc(el.dataset.n)}" data-v="${esc(el.dataset.v)}">${ic('check')} Confirmar recebimento</button>`:''}
+    <small>O link deste comprovante expira em 2 minutos.</small></div>`);
 };
 acoes['pag-cancelar']=async el=>{
   if(!confirm('Cancelar esta cobrança pendente?'))return;
@@ -899,7 +1054,8 @@ acoes['mem-bloquear']=async el=>{
 };
 acoes['mem-excluir']=async el=>{
   if(!confirm(`Excluir a conta de ${el.dataset.n} e TODOS os dados dela (pagamentos e usos)? Não dá pra desfazer.`))return;
-  await tk('nvd_admin_membro_excluir',{p_membro_id:el.dataset.id});fecharSheet();toast('Conta excluída.','ok');listarMembros();
+  // passa pela Edge Function: ela apaga os comprovantes do Storage antes da conta (senão sobra arquivo órfão)
+  await fnComprovante({acao:'excluir_membro',membro_id:el.dataset.id});fecharSheet();toast('Conta excluída.','ok');listarMembros();
 };
 
 /* --- parceiros e benefícios --- */

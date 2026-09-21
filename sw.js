@@ -1,6 +1,6 @@
 // Casca do app em cache pra abrir rápido e a carteirinha funcionar sem sinal dentro do restaurante.
 // Só GET do mesmo domínio e a biblioteca de QR passam por aqui: chamadas ao Supabase são POST e vão direto pra rede.
-const CACHE = 'nvd-card-v1';
+const CACHE = 'nvd-card-v2';
 const SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
 const LIB_QR = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js';
 
