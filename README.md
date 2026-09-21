@@ -28,7 +28,7 @@ Totalmente isolado do Portal:
 - Login próprio (`nvd.usuarios` + `nvd.sessoes`, senha com bcrypt, só o hash do token é guardado). Não usa Supabase Auth.
 - Limites anti-abuso (login, cadastro, validação) em `nvd.tentativas`.
 - Edge Function `nvd-comprovante` (fonte em `supabase/functions/nvd-comprovante/index.ts`, publicada com `verify_jwt=false` porque o login é próprio): recebe e serve os comprovantes. Detalhes abaixo.
-- O SQL está no histórico de migrações do projeto: `nvd_card_01` a `nvd_card_09` (Dashboard → Database → Migrations, ou `supabase db pull`).
+- O SQL está no histórico de migrações do projeto: `nvd_card_01` a `nvd_card_13` (Dashboard → Database → Migrations, ou `supabase db pull`).
 
 ## Pagamento
 
@@ -53,8 +53,27 @@ Estados do pagamento: `pendente`, `pago`, `cancelado`, `devolvido`.
 - **Cliente pede estorno** de um pagamento confirmado, com motivo (mínimo 5 caracteres). Um pedido por pagamento; depois de recusado, só pelo suporte.
 - **Admin devolve** (aba Pagamentos: filtros Estornos e Devolvidos): registra valor (total ou parcial, nunca acima do pago), observação (ex.: ID do Pix da devolução) e, se marcado, **remove da carteirinha os dias que aquele pagamento liberou** (se não sobrar plano, ela é encerrada na hora). **O Pix de devolução é feito no app do banco; o sistema só registra.**
 - **Admin recusa** um estorno com motivo, que o cliente lê.
+- **Comprovante da devolução:** ao registrar a devolução (ou depois, em "Trocar/Anexar comprovante da devolução") o admin anexa a prova do Pix de volta (imagem ou PDF, até 5 MB). O cliente vê em "Ver comprovante da devolução". Só admin anexa; o cliente vê apenas o do próprio pagamento. Vale a mesma regra de armazenamento privado e o arquivo é apagado junto com a conta do membro.
 - Um pagamento devolvido ou cancelado nunca volta a liberar carteirinha (`nvd.aplicar_pagamento` recusa).
 - Cancelar com motivo também vale para o admin; o cliente vê quem cancelou e por quê.
+
+## Descontos do estabelecimento, com aprovação do admin
+
+O atendente do parceiro tem a aba **Descontos**:
+
+- **Propõe** um desconto novo ou uma **alteração** de um que já está no ar. Nada muda para os clientes até o admin aprovar (aba **Aprovações**, com selo de pendentes). Ao aprovar, o desconto nasce ou é atualizado; ao recusar, o motivo aparece para o estabelecimento, que pode **corrigir e reenviar**.
+- Na alteração, o admin vê **o que muda destacado** e o valor atual riscado. Só há uma alteração pendente por desconto e no máximo 10 descontos novos pendentes por estabelecimento.
+- **Pausar e retomar** vale na hora (não muda os termos aprovados). A pausa é separada da desativação do admin: o parceiro nunca reativa o que o admin desligou. Desconto pausado some do cliente e do balcão.
+- O servidor valida o que o parceiro digita (percentual entre 0 e 100, valor positivo, limites coerentes) e guarda os termos normalizados.
+
+## Resumo de preço no momento do uso
+
+Ao confirmar o uso, o atendente informa o **valor da conta** (e, no 2x1, o valor do prato mais barato; em "outro", o desconto). **O cálculo oficial é do servidor**: percentual e valor fixo saem da conta, 2x1 desconta o prato de menor preço, brinde não abate. O resultado (conta, desconto, quanto pagar) aparece:
+
+- **no balcão**, com prévia enquanto o atendente digita e o resumo depois de confirmar;
+- **no celular do cliente**, em cerca de 3 segundos: primeiro "Carteirinha lida" quando o atendente valida, depois o resumo do desconto quando confirma. O app do cliente consulta `nvd_membro_atendimento` a cada poucos segundos enquanto mostra a carteirinha (o login é próprio, sem Realtime do Supabase). Não funciona sem internet: o cliente offline ainda apresenta o QR, mas não recebe o aviso.
+
+Os valores ficam gravados no uso (com uma foto dos termos do desconto na hora) e aparecem no histórico do cliente, do estabelecimento e do admin. A aba **Usos** do estabelecimento mostra totais de descontos concedidos e valor recebido, hoje e no mês.
 
 ## Rodar local
 
