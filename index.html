@@ -6,6 +6,7 @@
 <title>NVD CARD</title>
 <meta name="description" content="Clube de descontos em restaurantes e empresas parceiras.">
 <meta name="theme-color" content="#0a0f1f">
+<link rel="preconnect" href="https://defwtvwmxntoliuwzjnf.supabase.co" crossorigin>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -49,7 +50,7 @@ small{color:var(--muted);font-size:.8125rem}
 /* ===== estrutura ===== */
 .app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(var(--nav-h) + 28px + env(safe-area-inset-bottom))}
 body[data-role=admin] .app{max-width:1080px;padding-bottom:48px}
-.top{position:sticky;top:0;z-index:15;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:var(--bg);background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+.top{position:sticky;top:0;z-index:15;display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:var(--bg);border-bottom:1px solid var(--border)}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.06em}
 .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--gold2),var(--gold));display:grid;place-items:center;color:var(--on-gold);font-weight:900;font-size:.95rem}
 .ib{background:var(--s2);color:var(--text);border:1px solid var(--border);width:40px;height:40px;border-radius:12px;display:inline-grid;place-items:center;flex:none}
@@ -66,7 +67,19 @@ body[data-role=admin] .app{max-width:1080px;padding-bottom:48px}
 .tabbar-in{max-width:520px;margin:0 auto;display:flex}
 .tab{flex:1;min-width:0;padding:0 2px;background:none;border:0;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.7rem;font-weight:600;color:var(--muted2)}
 .tab.on{color:var(--goldtext)}
-.atabs{display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none}
+.atabs{position:relative;display:flex;gap:8px;overflow-x:auto;padding:12px 16px;scrollbar-width:none;-webkit-user-select:none;user-select:none}
+/* menu com muitas abas: setas nas pontas (só com mouse) e um esmaecido mostrando que há mais pra rolar */
+.atabs-wrap{position:relative}
+.atabs-wrap::before,.atabs-wrap::after{content:"";position:absolute;top:0;bottom:0;width:44px;pointer-events:none;z-index:2;opacity:0;transition:opacity .15s}
+.atabs-wrap::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.atabs-wrap::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent)}
+.atabs-wrap.tem-esq::before,.atabs-wrap.tem-dir::after{opacity:1}
+.atabs-seta{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:34px;height:34px;border-radius:50%;background:var(--s1);color:var(--text);border:1px solid var(--border2);box-shadow:var(--shadow);display:none;place-items:center;cursor:pointer}
+.atabs-seta:hover{border-color:var(--gold)}
+.atabs-seta.esq{left:6px}
+.atabs-seta.esq .ic{transform:scaleX(-1)}
+.atabs-seta.dir{right:6px}
+@media(pointer:fine){.atabs-seta:not([hidden]){display:grid}}
 .atabs::-webkit-scrollbar{display:none}
 .atab{flex:none;display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:var(--s1);border:1px solid var(--border);color:var(--muted);font-weight:600;font-size:.88rem}
 .atab.on{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
@@ -84,7 +97,7 @@ button.row:hover{border-color:var(--border2)}
 .logo img{width:100%;height:100%;object-fit:cover}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:rgba(233,185,91,.14);color:var(--goldtext);font-size:.72rem;font-weight:800}
-.fchips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.fchips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none;-webkit-user-select:none;user-select:none}
 .fchips::-webkit-scrollbar{display:none}
 .fchip{flex:none;padding:7px 13px;border-radius:999px;background:var(--s1);border:1px solid var(--border);color:var(--muted);font-size:.82rem;font-weight:600}
 .fchip.on{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
@@ -107,8 +120,13 @@ button.row:hover{border-color:var(--border2)}
 .kpi small{display:block}
 .kpi b{display:block;font-size:1.6rem;font-weight:800;margin-top:2px}
 .kpi.hot b{color:var(--amber)}
-.skl{height:180px;border-radius:var(--radius);background:linear-gradient(90deg,var(--s1),var(--s2),var(--s1));background-size:200% 100%;animation:skl 1.2s linear infinite}
-@keyframes skl{to{background-position:-200% 0}}
+/* esqueleto de carregamento leve: só opacidade (não repinta o gradiente a cada quadro, que pesa em celular simples) */
+.skl{height:180px;border-radius:var(--radius);background:var(--s2);animation:skl 1.4s ease-in-out infinite}
+@keyframes skl{50%{opacity:.45}}
+#netbar{position:fixed;top:calc(6px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:95;background:var(--amber);color:#1b1300;font-size:.78rem;font-weight:800;padding:5px 14px;border-radius:99px;box-shadow:var(--shadow);white-space:nowrap}
+#updbar{position:fixed;left:12px;right:12px;bottom:calc(var(--nav-h) + 12px + env(safe-area-inset-bottom));z-index:96;max-width:496px;margin:0 auto;display:flex;align-items:center;gap:10px;background:var(--s3);color:var(--text);border:1px solid var(--gold);border-radius:14px;padding:10px 12px;font-size:.86rem;font-weight:600;box-shadow:var(--shadow)}
+#updbar span{flex:1}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ===== formulários e botões ===== */
 .field label{display:block;font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:6px}
@@ -157,7 +175,7 @@ button.row:hover{border-color:var(--border2)}
 .pin-row span{color:#9aa6d6;font-size:.7rem;letter-spacing:.16em}
 .pin-row b{font-size:1.55rem;letter-spacing:.18em;font-variant-numeric:tabular-nums}
 .timer{height:5px;border-radius:99px;background:rgba(255,255,255,.14);margin:12px auto 0;max-width:236px;overflow:hidden;position:relative}
-.timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#e9b95b,#f7d68e);border-radius:99px;transition:width 1s linear}
+.timer i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#e9b95b,#f7d68e);border-radius:99px;transform-origin:left;transition:transform 1s linear}
 .w-hint{text-align:center;color:#b6bfe6;font-size:.78rem;margin-top:10px;position:relative}
 .w-foot{margin-top:14px;color:#b6bfe6;font-size:.8rem;text-align:center;position:relative}
 .lock{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:22px 8px 8px;position:relative}
@@ -194,6 +212,25 @@ button.row:hover{border-color:var(--border2)}
   .pane{display:block;position:sticky;top:76px;max-height:calc(100vh - 96px);overflow:auto}
 }
 .row.sel{border-color:var(--gold);background:rgba(233,185,91,.08)}
+
+/* ===== resumo de preço e aviso ao cliente ===== */
+.resumo{margin-top:6px}
+.rs-ben{padding:10px 0 12px;border-bottom:1px solid var(--border)}
+.rs-ben b{display:block;font-size:1.05rem}
+.rs-pagar{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 0 2px}
+.rs-pagar small{font-size:.95rem;font-weight:700;color:var(--muted)}
+.rs-pagar strong{font-size:2rem;letter-spacing:-.02em}
+.calc{margin-top:10px;padding:12px 14px;border-radius:14px;background:var(--s2);border:1px solid var(--border2)}
+.calc .rs-pagar{padding:6px 0 0}
+.calc .rs-pagar strong{font-size:1.6rem}
+.calc.erro{border-color:var(--red);color:var(--red);font-size:.9rem}
+.aviso-bg{position:fixed;inset:0;z-index:70;background:rgba(3,6,18,.74);display:flex;align-items:center;justify-content:center;padding:16px;animation:fade .15s}
+.aviso{background:var(--s1);border:2px solid var(--green);border-radius:24px;padding:22px 20px;width:100%;max-width:420px;max-height:92vh;max-height:92dvh;overflow:auto}
+.aviso.aguarde{border-color:var(--gold);text-align:center}
+.aviso h2{margin:6px 0 2px;font-size:1.3rem}
+.aviso>.res-i{margin:0 auto 10px;width:64px;height:64px}
+.aviso.res.ok{text-align:left}
+.aviso.res.ok>.res-i,.aviso.res.ok>h2,.aviso.res.ok>.muted{text-align:center;margin-left:auto;margin-right:auto}
 
 /* ===== resultado da validação (parceiro) ===== */
 .res{border-width:2px}
@@ -279,11 +316,10 @@ button.row:hover{border-color:var(--border2)}
 </defs></svg>
 
 <div id="app"></div>
+<div id="netbar" role="status" hidden>Conexão lenta. Tentando de novo…</div>
 <div id="toast" role="status" aria-live="polite"></div>
 <noscript><p style="padding:24px;text-align:center">Ative o JavaScript para usar o NVD CARD.</p></noscript>
 
-<!-- biblioteca de QR com integridade fixada; o service worker guarda uma cópia pra carteirinha abrir sem sinal -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" integrity="sha512-ZDSPMa/JM1D+7kdg2x3BsruQ6T/JpJo3jWDWkCZsP+5yVyp1KfESqLI+7RqB5k24F7p2cV7i2YHh/890y6P6Sw==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 <script>
 'use strict';
 /* =====================================================================
@@ -293,7 +329,7 @@ button.row:hover{border-color:var(--border2)}
    ===================================================================== */
 const SB_URL='https://defwtvwmxntoliuwzjnf.supabase.co';
 const SB_KEY='sb_publishable_QukddDQPhm3R3XaUlxIY6w_7qleuNL8';
-const VERSAO='1.0.0';
+const VERSAO='1.2.0';
 const TZ='America/Sao_Paulo';
 
 /* ---------- utilitários ---------- */
@@ -323,6 +359,39 @@ function resumoBenef(b){
 }
 // o navegador bloqueia vibrate antes do primeiro toque; sem essa checagem ele só polui o console
 const vibrar=p=>{try{if(navigator.vibrate&&(!navigator.userActivation||navigator.userActivation.hasBeenActive))navigator.vibrate(p)}catch(e){}};
+const fmtNum=n=>Number(n).toLocaleString('pt-BR',{maximumFractionDigits:2});
+// texto do benefício aplicado: o mesmo pro atendente e pro cliente verem
+function textoBenef(tipo,valor){
+  if(tipo==='2x1')return 'Pague 1 e leve 2: o prato de menor valor sai de graça';
+  if(tipo==='percentual'&&valor!=null)return `${fmtNum(valor)}% de desconto na conta`;
+  if(tipo==='valor_fixo'&&valor!=null)return `R$ ${fmtNum(valor)} de desconto na conta`;
+  if(tipo==='brinde')return 'Brinde da casa (não abate da conta)';
+  return 'Benefício da casa';
+}
+// espelho do cálculo do servidor, só pra mostrar a prévia enquanto o atendente digita. O número oficial é o que o servidor devolve
+function calcularLocal(tipo,valor,conta,item,manual){
+  if(conta==null)return ['percentual','valor_fixo','2x1'].includes(tipo)?{erro:'Informe o valor da conta.'}:{desconto:null,pagar:null};
+  if(conta<=0)return {erro:'O valor da conta precisa ser maior que zero.'};
+  let d=0;
+  if(tipo==='2x1'){
+    if(item==null||item<=0)return {erro:'Informe o valor do prato de menor preço.'};
+    if(item>conta)return {erro:'O prato de menor preço não pode custar mais que a conta.'};
+    d=item;
+  }else if(tipo==='percentual')d=Math.round(conta*(Number(valor)||0)/100);
+  else if(tipo==='valor_fixo')d=Math.round((Number(valor)||0)*100);
+  else if(tipo==='outro')d=manual||0;
+  d=Math.min(Math.max(d,0),conta);
+  return {desconto:d,pagar:conta-d};
+}
+// resumo do uso: conta, desconto e quanto pagar. Mostrado igual no balcão (quem validou) e no celular do cliente (quem foi validado)
+function resumoUsoHtml(u,quem){
+  const cli=quem==='cliente';
+  return `<div class="resumo"><div class="rs-ben"><b>${esc(u.beneficio)}</b><small>${esc(textoBenef(u.tipo,u.valor_beneficio))}</small></div>
+    ${u.conta_centavos!=null?`<div class="kv"><span>Valor da conta</span><b>${brl(u.conta_centavos)}</b></div>
+      <div class="kv"><span>Desconto aplicado</span><b style="color:var(--green)">− ${brl(u.desconto_centavos)}</b></div>
+      <div class="rs-pagar"><small>${cli?'Você paga':'Cliente paga'}</small><strong>${brl(u.pagar_centavos)}</strong></div>`
+    :`<div class="banner info" style="margin:12px 0 0">${ic('alert')}<span>Valor da conta não informado. ${cli?'Confirme o valor final com o atendente.':'Informe o valor final ao cliente.'}</span></div>`}</div>`;
+}
 const skl=()=>'<div class="skl"></div>';
 const vazio=(icone,msg)=>`<div class="empty">${ic(icone)}<p>${msg}</p></div>`;
 function copiar(txt){
@@ -342,24 +411,54 @@ function alternarTema(){
 /* ---------- campos de formulário ---------- */
 const fld=(id,label,v='',o={})=>`<div class="field"><label for="${id}">${label}</label>${o.area
   ?`<textarea id="${id}" rows="${o.rows||3}" ${o.max?`maxlength="${o.max}"`:''} placeholder="${esc(o.ph||'')}">${esc(v)}</textarea>`
-  :`<input id="${id}" type="${o.type||'text'}" value="${esc(v)}" placeholder="${esc(o.ph||'')}" ${o.max?`maxlength="${o.max}"`:''} ${o.mode?`inputmode="${o.mode}"`:''} ${o.auto?`autocomplete="${o.auto}"`:''} ${o.list?`list="${o.list}"`:''} ${o.req?'required':''}>`}${o.hint?`<small>${o.hint}</small>`:''}</div>`;
+  :`<input id="${id}" type="${o.type||'text'}" value="${esc(v)}" placeholder="${esc(o.ph||'')}" ${o.max?`maxlength="${o.max}"`:''} ${o.mode?`inputmode="${o.mode}"`:''} ${o.auto?`autocomplete="${o.auto}"`:''} ${o.list?`list="${o.list}"`:''} ${o.req?'required':''} ${o.extra||''}>`}${o.hint?`<small>${o.hint}</small>`:''}</div>`;
 const sel=(id,label,opts,cur)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${opts.map(([v,t])=>`<option value="${esc(v)}" ${String(v)===String(cur)?'selected':''}>${esc(t)}</option>`).join('')}</select></div>`;
 const val=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
 const parseValor=s=>{const t=String(s||'').trim().replace(/[R$\s]/g,'').replace(/\./g,'').replace(',','.');if(t==='')return null;const n=Number(t);return isFinite(n)?n:NaN};
 
 /* ---------- API ---------- */
 const S={token:null,papel:null,user:null,parceiro:null,config:{},tab:null,cart:null,offline:false};
+/* Feita pra rede fraca: cada tentativa tem limite de tempo (sem ficar pendurada), falha de rede tenta de novo sozinha e um aviso
+   discreto "Conexão lenta" aparece se demorar. Só repete sozinho o que é seguro repetir (leituras e ações que o servidor protege). */
+let emVoo=0,avisoT=null;
+const dorme=ms=>new Promise(r=>setTimeout(r,ms));
+const REPETIVEL=/^nvd_(sessao|login|logout|planos_publicos|config_publica|membro_(carteirinha|parceiros|historico|pagamentos|atendimento|criar_pagamento|informar_pagamento)|parceiro_(resumo|validar|confirmar_uso|descontos)|admin_(painel|pagamentos|comprovantes|membros|planos|parceiros|usuarios|usos|config|aprovacoes))$/;
 async function api(fn,args={},o={}){
-  let res;
-  try{res=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args)})}
-  catch(e){const err=new Error('Sem conexão com a internet.');err.offline=true;throw err}
-  let data=null;try{data=await res.json()}catch(e){}
-  if(!res.ok){
-    if(res.status===401&&S.token&&!o.semLogout)sessaoExpirou();
-    const err=new Error((data&&data.message)||'Erro inesperado. Tente de novo.');err.status=res.status;throw err;
+  // limite de tempo por tentativa (pode ser uma lista crescente): conexão travada é abandonada cedo e refeita numa conexão nova,
+  // mas a última tentativa espera mais, pra resposta grande em rede lenta ter tempo de chegar
+  const max=o.tentativas||(REPETIVEL.test(fn)?3:1),lista=[].concat(o.timeout||[10000,15000,25000]);
+  let ultimo;
+  if(++emVoo===1)avisoT=setTimeout(()=>{const b=$('#netbar');if(b)b.hidden=false},2500);
+  try{
+    for(let i=1;i<=max;i++){
+      if(o.onTentativa)o.onTentativa(i,max);
+      const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),lista[Math.min(i-1,lista.length-1)]);
+      let res,data=null;
+      try{
+        res=await fetch(`${SB_URL}/rest/v1/rpc/${fn}`,{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify(args),signal:ctl.signal});
+        try{data=await res.json()}catch(e){if(ctl.signal.aborted)throw e}
+      }catch(e){
+        ultimo=new Error(ctl.signal.aborted?'A conexão está muito lenta.':'Sem conexão com a internet.');ultimo.offline=true;
+        if(i<max)await dorme(300*i);
+        continue;
+      }finally{clearTimeout(t)}
+      // 429/502/503/504 = gargalo de rede ou servidor ocupado (passageiro): tenta de novo; nas outras respostas o erro é real e vai pra tela
+      if(res.status===429||(res.status>=502&&res.status<=504)){
+        ultimo=new Error('O servidor está ocupado. Tente de novo em instantes.');ultimo.offline=true;
+        if(i<max){await dorme(500*i);continue}
+        break;
+      }
+      if(!res.ok){
+        if(res.status===401&&S.token&&!o.semLogout)sessaoExpirou();
+        const err=new Error((data&&data.message)||'Erro inesperado. Tente de novo.');err.status=res.status;throw err;
+      }
+      if(!o.raw&&data&&data.ok===false){const err=new Error(data.erro||'Não foi possível concluir.');err.dados=data;throw err}
+      return data;
+    }
+    throw ultimo;
+  }finally{
+    if(--emVoo===0){clearTimeout(avisoT);const b=$('#netbar');if(b)b.hidden=true}
   }
-  if(!o.raw&&data&&data.ok===false){const err=new Error(data.erro||'Não foi possível concluir.');err.dados=data;throw err}
-  return data;
 }
 const tk=(fn,args={},o)=>api(fn,{p_token:S.token,...args},o);
 
@@ -408,10 +507,80 @@ async function gerarToken(codigo,secret,janela){
   const n=(((p[0]&127)<<24)|(p[1]<<16)|(p[2]<<8)|p[3])%1000000;
   return {qr:`NVD1.${codigo}.${janela}.${hex(a).slice(0,16)}`,pin:String(n).padStart(6,'0')};
 }
+/* Gerador de QR próprio (modo byte, correção M, versões 1 a 3): sem biblioteca externa, então a carteirinha nunca espera
+   download de outro site nem falha sem sinal. O texto da carteirinha tem 39 bytes e cabe na versão 3 (29x29). */
+const GF_EXP=new Uint8Array(512),GF_LOG=new Uint8Array(256);
+(()=>{let x=1;for(let i=0;i<255;i++){GF_EXP[i]=x;GF_LOG[x]=i;x<<=1;if(x&256)x^=0x11d}for(let i=255;i<512;i++)GF_EXP[i]=GF_EXP[i-255]})();
+const gfMul=(a,b)=>a&&b?GF_EXP[GF_LOG[a]+GF_LOG[b]]:0;
+const QR_V=[null,{dados:16,ec:10},{dados:28,ec:16},{dados:44,ec:26}]; // bloco único, nível M
+function rsResto(dados,n){
+  let g=[1];
+  for(let i=0;i<n;i++){const ng=new Array(g.length+1).fill(0);for(let j=0;j<g.length;j++){ng[j]^=g[j];ng[j+1]^=gfMul(g[j],GF_EXP[i])}g=ng}
+  const r=new Array(n).fill(0);
+  for(const d of dados){const f=d^r.shift();r.push(0);for(let i=0;i<n;i++)r[i]^=gfMul(g[i+1],f)}
+  return r;
+}
+function qrMatriz(texto,forcaMascara){
+  const bytes=[...new TextEncoder().encode(texto)];
+  let v=1;while(v<=3&&bytes.length>QR_V[v].dados-2)v++;
+  if(v>3)throw new Error('Texto grande demais para o QR');
+  const {dados,ec}=QR_V[v],n=17+4*v;
+  const bits=[],put=(x,k)=>{for(let i=k-1;i>=0;i--)bits.push((x>>i)&1)};
+  put(4,4);put(bytes.length,8);bytes.forEach(b=>put(b,8));put(0,Math.min(4,dados*8-bits.length));
+  while(bits.length%8)bits.push(0);
+  const cw=[];for(let i=0;i<bits.length;i+=8)cw.push(parseInt(bits.slice(i,i+8).join(''),2));
+  for(let p=0xec;cw.length<dados;p^=0xec^0x11)cw.push(p);
+  const fluxo=[];cw.concat(rsResto(cw,ec)).forEach(b=>{for(let i=7;i>=0;i--)fluxo.push((b>>i)&1)});
+  const m=Array.from({length:n},()=>new Array(n).fill(false)),fn=Array.from({length:n},()=>new Array(n).fill(false));
+  const set=(r,c,x)=>{if(r>=0&&r<n&&c>=0&&c<n){m[r][c]=x;fn[r][c]=true}};
+  const loc=(r0,c0)=>{for(let dr=-1;dr<=7;dr++)for(let dc=-1;dc<=7;dc++){const dentro=dr>=0&&dr<=6&&dc>=0&&dc<=6;set(r0+dr,c0+dc,dentro&&(dr===0||dr===6||dc===0||dc===6||(dr>=2&&dr<=4&&dc>=2&&dc<=4)))}};
+  loc(0,0);loc(0,n-7);loc(n-7,0);
+  for(let i=8;i<n-8;i++){set(6,i,i%2===0);set(i,6,i%2===0)}
+  if(v>=2){const a=n-7;for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++)set(a+dr,a+dc,Math.max(Math.abs(dr),Math.abs(dc))!==1)}
+  set(n-8,8,true);
+  for(let i=0;i<9;i++){fn[8][i]=true;fn[i][8]=true}
+  for(let i=0;i<8;i++){fn[8][n-1-i]=true;fn[n-1-i][8]=true}
+  let k=0;
+  for(let dir=n-1;dir>=1;dir-=2){
+    if(dir===6)dir=5;
+    for(let vert=0;vert<n;vert++)for(let j=0;j<2;j++){
+      const x=dir-j,y=((dir+1)&2)===0?n-1-vert:vert;
+      if(!fn[y][x]&&k<fluxo.length)m[y][x]=fluxo[k++]===1;
+    }
+  }
+  const cond=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(((x/3)|0)+((y/2)|0))%2===0,(x,y)=>x*y%2+x*y%3===0,(x,y)=>(x*y%2+x*y%3)%2===0,(x,y)=>((x+y)%2+x*y%3)%2===0];
+  const montar=mk=>{
+    const c=m.map(l=>l.slice());
+    for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(!fn[y][x]&&cond[mk](x,y))c[y][x]=!c[y][x];
+    let rem=mk;for(let q=0;q<10;q++)rem=(rem<<1)^((rem>>>9)*0x537);
+    const fb=((mk<<10)|rem)^0x5412,b=q=>((fb>>q)&1)===1,sf=(x,y,d)=>{c[y][x]=d};
+    for(let q=0;q<=5;q++)sf(8,q,b(q));sf(8,7,b(6));sf(8,8,b(7));sf(7,8,b(8));for(let q=9;q<15;q++)sf(14-q,8,b(q));
+    for(let q=0;q<8;q++)sf(n-1-q,8,b(q));for(let q=8;q<15;q++)sf(8,n-15+q,b(q));
+    sf(8,n-8,true);
+    return c;
+  };
+  // escolhe a máscara de menor penalidade (regras da norma: sequências, blocos 2x2, padrões parecidos com o localizador e equilíbrio claro/escuro)
+  const pena=c=>{
+    let p=0;
+    for(let t=0;t<2;t++)for(let a=0;a<n;a++){
+      let s='',corrida=1;
+      for(let b=0;b<n;b++){
+        const cur=t?c[b][a]:c[a][b];s+=cur?'1':'0';
+        if(b>0&&cur===(t?c[b-1][a]:c[a][b-1])){corrida++;if(corrida===5)p+=3;else if(corrida>5)p++}else corrida=1;
+      }
+      p+=40*((s.match(/(?=00001011101|10111010000)/g)||[]).length);
+    }
+    for(let y=0;y<n-1;y++)for(let x=0;x<n-1;x++){const q=c[y][x];if(q===c[y][x+1]&&q===c[y+1][x]&&q===c[y+1][x+1])p+=3}
+    const escuro=c.reduce((s,l)=>s+l.filter(Boolean).length,0);
+    return p+(Math.ceil(Math.abs(escuro*20-n*n*10)/(n*n))-1)*10;
+  };
+  let melhor=null,pmin=Infinity;
+  for(let mk=0;mk<8;mk++){if(forcaMascara!=null&&mk!==forcaMascara)continue;const c=montar(mk),pp=pena(c);if(pp<pmin){pmin=pp;melhor=c}}
+  return melhor;
+}
 function qrSvg(texto){
-  const q=qrcode(0,'M');q.addData(texto);q.make();
-  const n=q.getModuleCount(),m=3;let d='';
-  for(let r=0;r<n;r++){let c=0;while(c<n){if(q.isDark(r,c)){const s=c;while(c<n&&q.isDark(r,c))c++;d+=`M${s} ${r}h${c-s}v1h-${c-s}z`}else c++}}
+  const q=qrMatriz(texto),n=q.length,m=3;let d='';
+  for(let r=0;r<n;r++){let c=0;while(c<n){if(q[r][c]){const s=c;while(c<n&&q[r][c])c++;d+=`M${s} ${r}h${c-s}v1h-${c-s}z`}else c++}}
   return `<svg viewBox="${-m} ${-m} ${n+2*m} ${n+2*m}" shape-rendering="crispEdges" role="img" aria-label="QR code da carteirinha"><rect x="${-m}" y="${-m}" width="${n+2*m}" height="${n+2*m}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
 }
 
@@ -419,8 +588,8 @@ function qrSvg(texto){
 function salvarSessao(){store.set('nvd.sessao',JSON.stringify({token:S.token}))}
 function limparSessao(){
   pararQr();
-  S.token=null;S.papel=null;S.user=null;S.parceiro=null;S.cart=null;S.tab=null;S.offline=false;
-  ['nvd.sessao','nvd.cart','nvd.perfil'].forEach(k=>store.del(k));
+  S.token=null;S.papel=null;S.user=null;S.parceiro=null;S.cart=null;S.cartEm=0;S.tab=null;S.offline=false;
+  ['nvd.sessao','nvd.cart','nvd.perfil','nvd.atvisto','nvd.parceiros'].forEach(k=>store.del(k));S.atVisto='';fecharAviso();
 }
 function sessaoExpirou(){limparSessao();fecharSheet();renderAuth('Sua sessão expirou. Entre novamente.')}
 async function iniciarSessao(token){
@@ -523,30 +692,70 @@ function renderMembro(){
 }
 function irTab(t){
   S.tab=t;pararQr();
-  if(S.papel==='admin')limparArquivos(); // comprovantes abertos ficam em blob na memória: solta ao trocar de aba
+  limparArquivos(); // comprovantes abertos ficam em blob na memória: solta ao trocar de aba
   $$('.tabbar .tab,.atab').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  centralizarAba();
   window.scrollTo(0,0);
   const mapa=S.papel==='membro'?tabsMembro:S.papel==='parceiro'?tabsParceiro:tabsAdmin;
   if(mapa[t])mapa[t]();
 }
 acoes.tab=el=>irTab(el.dataset.t);
+
+/* --- barras horizontais (menu do admin e filtros): seta, roda do mouse e arrastar; no celular o dedo já rola --- */
+let arrastou=false;
+document.addEventListener('wheel',e=>{
+  const el=e.target.closest&&e.target.closest('.atabs,.fchips');
+  if(!el||el.scrollWidth<=el.clientWidth||Math.abs(e.deltaY)<=Math.abs(e.deltaX))return;
+  el.scrollLeft+=e.deltaY;e.preventDefault();
+},{passive:false});
+document.addEventListener('pointerdown',e=>{
+  const el=e.target.closest&&e.target.closest('.atabs,.fchips');
+  if(!el||e.pointerType!=='mouse'||e.button!==0||el.scrollWidth<=el.clientWidth)return;
+  const x0=e.clientX,s0=el.scrollLeft;let moveu=false;
+  const mv=ev=>{const dx=ev.clientX-x0;if(Math.abs(dx)>5)moveu=true;if(moveu)el.scrollLeft=s0-dx};
+  const up=()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);if(moveu){arrastou=true;setTimeout(()=>{arrastou=false},60)}};
+  window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);
+});
+// depois de arrastar, o clique que o navegador dispara em seguida não pode abrir a aba onde o mouse foi solto
+document.addEventListener('click',e=>{if(arrastou){e.stopPropagation();e.preventDefault();arrastou=false}},true);
+function atualizarSetasMenu(){
+  const nav=$('#atabs'),w=$('#atabsWrap');if(!nav||!w)return;
+  const max=nav.scrollWidth-nav.clientWidth,tEsq=nav.scrollLeft>4,tDir=nav.scrollLeft<max-4;
+  w.classList.toggle('tem-esq',tEsq);w.classList.toggle('tem-dir',tDir);
+  const e=$('#atabsEsq'),d=$('#atabsDir');if(e)e.hidden=!tEsq;if(d)d.hidden=!tDir;
+}
+function ligarSetasMenu(){const nav=$('#atabs');if(!nav)return;nav.addEventListener('scroll',atualizarSetasMenu,{passive:true});atualizarSetasMenu()}
+window.addEventListener('resize',atualizarSetasMenu);
+acoes['tabs-rolar']=el=>{const nav=$('#atabs');if(nav)nav.scrollBy({left:Number(el.dataset.d)*Math.max(nav.clientWidth*.6,180),behavior:'smooth'})};
+// a aba escolhida vai pro centro do menu (útil quando abre uma aba que estava escondida no fim)
+function centralizarAba(){
+  const nav=$('#atabs'),on=nav&&$('.atab.on');
+  if(nav&&on)nav.scrollTo({left:on.offsetLeft-(nav.clientWidth-on.offsetWidth)/2,behavior:'smooth'});
+}
 const tabsMembro={};
 
 /* --- carteirinha --- */
 async function carregarCart(){
-  const t0=Date.now(),r=await tk('nvd_membro_carteirinha');
+  const token=S.token,t0=Date.now(),r=await tk('nvd_membro_carteirinha');
+  if(S.token!==token)return; // rede lenta: a resposta chegou depois de sair/trocar de conta, não pode aparecer pra outra pessoa
   // offset entre o relógio do aparelho e o do servidor: o QR usa a hora do servidor, então relógio errado não quebra
-  S.cart={...r,offsetMs:r.agora_ms-(t0+Date.now())/2};
+  S.cart={...r,offsetMs:r.agora_ms-(t0+Date.now())/2};S.cartEm=Date.now();
   store.set('nvd.cart',JSON.stringify(S.cart));
 }
 const cartAtiva=c=>!!(c&&!c.bloqueado&&c.valido_ate&&new Date(c.valido_ate).getTime()>Date.now()+c.offsetMs);
+// abre na hora com a carteirinha guardada no aparelho (o QR é calculado aqui, sem depender do servidor) e atualiza em segundo plano:
+// rede fraca não deixa a tela vazia nem o cliente esperando pra mostrar o código
+const assinaturaCart=c=>c?[c.codigo,c.qr_secret,c.valido_ate,c.bloqueado,c.nome,c.pendente&&c.pendente.id,c.pendente&&c.pendente.informado_em].join('|'):'';
 tabsMembro.cart=async()=>{
   const v=$('#view');
   if(!S.cart){try{S.cart=JSON.parse(store.get('nvd.cart')||'null')}catch(e){}}
-  if(!S.cart)v.innerHTML=skl();
+  const antes=assinaturaCart(S.cart);
+  // se a carteirinha já está na tela (voltou de outro app), não redesenha: o QR não pisca
+  if(S.cart){if(!$('.wallet'))desenharCart()}else v.innerHTML=skl();
   try{await carregarCart();S.offline=false}
-  catch(e){if(!e.offline||!S.cart)return erroView(v,e);S.offline=true}
-  if(S.tab==='cart')desenharCart();
+  catch(e){if(!S.cart)return erroView(v,e);S.offline=true;if(S.tab==='cart'&&!$('.banner.warn'))desenharCart();return}
+  // só redesenha se algo visível mudou (evita piscar o QR a cada atualização)
+  if(S.tab==='cart'&&(antes!==assinaturaCart(S.cart)||$('.banner.warn')))desenharCart();
 };
 function desenharCart(){
   const c=S.cart,v=$('#view'),ativa=cartAtiva(c);
@@ -572,7 +781,7 @@ function desenharCart(){
 }
 function pararQr(){if(S.qrTimer){clearInterval(S.qrTimer);S.qrTimer=null}S.qrWin=null}
 function iniciarQr(){
-  pararQr();S.tickN=0;
+  pararQr();S.tickN=0;S.atN=0;
   const tick=async()=>{
     const c=S.cart;if(!c)return;
     if(!cartAtiva(c)){pararQr();return desenharCart()}
@@ -582,17 +791,54 @@ function iniciarQr(){
       try{
         const t=await gerarToken(c.codigo,c.qr_secret,win);
         if(S.qrWin!==win||!$('#qr'))return;
-        $('#qr').innerHTML=typeof qrcode==='function'?qrSvg(t.qr):'<div class="qr-off">QR indisponível agora. Use o código e o PIN abaixo.</div>';
+        $('#qr').innerHTML=qrSvg(t.qr);
         $('#pin').textContent=t.pin.slice(0,3)+' '+t.pin.slice(3);
       }catch(e){if($('#qr'))$('#qr').innerHTML=`<div class="qr-off">${esc(e.message)}</div>`}
     }
-    const b=$('#tbar');if(b)b.style.width=((30-(agora%30))/30*100)+'%';
+    const b=$('#tbar');if(b)b.style.transform='scaleX('+((30-(agora%30))/30)+')';
     // com pagamento pendente, confere a cada ~20 s se o admin já confirmou
     if(c.pendente&&++S.tickN%20===0&&!S.offline)carregarCart().then(()=>{if(S.tab==='cart'&&cartAtiva(S.cart)!==cartAtiva(c))desenharCart()}).catch(()=>{});
+    // a cada ~3 s pergunta se o atendente já validou/confirmou: o resumo aparece no celular sem o cliente tocar em nada.
+    // Sem sinal, tenta só a cada ~15 s; quando a resposta volta, o aviso de "sem conexão" some sozinho
+    if(++S.atN%(S.offline?15:3)===0)verAtendimento();
   };
   tick();S.qrTimer=setInterval(tick,1000);
 }
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.papel==='membro'&&S.tab==='cart'&&S.token)tabsMembro.cart()});
+// ao voltar pra tela atualiza a carteirinha, mas no máximo a cada 15 s: quem alterna de app toda hora não gasta a rede fraca à toa
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.papel==='membro'&&S.tab==='cart'&&S.token&&Date.now()-(S.cartEm||0)>15000)tabsMembro.cart()});
+
+/* --- aviso em tempo (quase) real: o cliente vê o desconto no mesmo instante em que o atendente confirma --- */
+S.atVisto=store.get('nvd.atvisto')||'';
+function fecharAviso(){const a=$('#aviso');if(a)a.remove()}
+acoes['fechar-aviso']=()=>fecharAviso();
+function mostrarAviso(ev){
+  fecharAviso();
+  const bg=document.createElement('div');bg.className='aviso-bg';bg.id='aviso';
+  if(ev.tipo==='validada'){
+    bg.innerHTML=`<div class="aviso aguarde" role="dialog" aria-modal="true"><div class="res-i" style="background:rgba(233,185,91,.18);color:var(--gold)">${ic('scan')}</div>
+      <h2>Carteirinha lida</h2><p class="muted" style="margin:8px 0 16px"><b>${esc(ev.parceiro)}</b> validou a sua carteirinha. O resumo do desconto aparece aqui assim que o atendente confirmar.</p>
+      <button type="button" class="btn sec block" data-act="fechar-aviso">Fechar</button></div>`;
+  }else{
+    bg.innerHTML=`<div class="aviso res ok" role="dialog" aria-modal="true"><div class="res-i">${ic('check')}</div><h2>Desconto aplicado!</h2><p class="muted">${esc(ev.parceiro)}</p>
+      ${resumoUsoHtml({...ev,tipo:ev.tipo_beneficio},'cliente')}
+      <button type="button" class="btn block" style="margin-top:16px" data-act="fechar-aviso">Ok, entendi</button></div>`;
+  }
+  document.body.appendChild(bg);vibrar([80,40,80]);
+}
+async function verAtendimento(){
+  // só consulta quando a tela está visível e a rede está livre: não disputa banda com o que o cliente está fazendo
+  if(S.atBusy||document.hidden||emVoo>0||S.papel!=='membro'||S.tab!=='cart')return;
+  S.atBusy=true;const token=S.token;
+  try{
+    const ev=(await tk('nvd_membro_atendimento',{},{semLogout:true,tentativas:1,timeout:6000})).evento;
+    if(S.token!==token)return;
+    if(S.offline){S.offline=false;if(S.tab==='cart'&&S.cart)desenharCart()}
+    if(!ev)return;
+    const chave=ev.tipo+':'+ev.id;
+    if(S.atVisto===chave)return; // este já foi mostrado (ou dispensado)
+    S.atVisto=chave;store.set('nvd.atvisto',chave);mostrarAviso(ev);
+  }catch(e){}finally{S.atBusy=false}
+}
 
 /* --- planos e pagamento --- */
 acoes.planos=async()=>{
@@ -718,7 +964,7 @@ function linhaPg(g){
   const pode=g.status==='pago'&&!g.estorno_status;
   return `<div class="row" style="flex-wrap:wrap;align-items:flex-start"><div class="grow"><b>${esc(g.plano)}</b><small>${esc(g.referencia)} · ${esc(dt(g.pago_em||g.criado_em))}</small>${g.comprovante?`<small>${ic('paperclip','sm')} ${esc(g.comprovante.nome)}</small>`:''}${l.map(t=>`<small>${t}</small>`).join('')}</div>
     <div class="end"><b>${brl(g.valor_centavos)}</b><span class="pill ${s[0]}">${s[1]}</span></div>
-    ${pode?`<div style="width:100%;margin-top:4px"><button type="button" class="btn sec sm" data-act="pg-estorno" data-id="${esc(g.id)}">Solicitar estorno</button></div>`:''}</div>`;
+    ${(pode||g.devolucao_comprovante)?`<div style="width:100%;margin-top:4px;display:flex;gap:8px;flex-wrap:wrap">${pode?`<button type="button" class="btn sec sm" data-act="pg-estorno" data-id="${esc(g.id)}">Solicitar estorno</button>`:''}${g.devolucao_comprovante?`<button type="button" class="btn sec sm" data-act="dev-ver-cli" data-id="${esc(g.id)}">${ic('eye')} Ver comprovante da devolução</button>`:''}</div>`:''}</div>`;
 }
 tabsMembro.pagtos=async()=>{
   const v=$('#view');v.innerHTML=skl();
@@ -791,16 +1037,27 @@ acoes['comp-enviar']=async el=>{
 
 /* --- parceiros --- */
 S.pf={q:'',cat:''};
+// mostra a última lista guardada na hora e atualiza em segundo plano
 tabsMembro.parceiros=async()=>{
-  const v=$('#view');v.innerHTML=skl();
-  try{S.parceiros=(await tk('nvd_membro_parceiros')).parceiros}catch(e){return erroView(v,e)}
+  const v=$('#view');let cache=null;
+  try{cache=JSON.parse(store.get('nvd.parceiros')||'null')}catch(e){}
   if(!S.cart){try{S.cart=JSON.parse(store.get('nvd.cart')||'null')}catch(e){}}
+  if(cache){S.parceiros=cache;pintarParceiros()}else v.innerHTML=skl();
+  try{
+    const token=S.token,r=(await tk('nvd_membro_parceiros')).parceiros,mudou=JSON.stringify(r)!==JSON.stringify(cache);
+    if(S.token!==token)return;
+    S.parceiros=r;store.set('nvd.parceiros',JSON.stringify(r));
+    if(mudou||!cache)pintarParceiros();
+  }catch(e){if(!cache)return erroView(v,e)}
+};
+function pintarParceiros(){
+  const v=$('#view');if(!v||S.tab!=='parceiros')return;
   const cats=[...new Set(S.parceiros.map(p=>p.categoria))].sort();
   v.innerHTML=`<div class="field" style="margin-bottom:12px"><input id="pq" type="search" placeholder="Buscar restaurante, categoria ou cidade" value="${esc(S.pf.q)}" aria-label="Buscar parceiros"></div>
     <div class="fchips" id="pcats"><button type="button" class="fchip ${S.pf.cat?'':'on'}" data-act="cat" data-v="">Todos</button>${cats.map(c=>`<button type="button" class="fchip ${S.pf.cat===c?'on':''}" data-act="cat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <div class="list" id="plist"></div>`;
   listaParceiros();
-};
+}
 function listaParceiros(){
   const q=S.pf.q.trim().toLowerCase(),L=$('#plist');if(!L)return;
   const r=S.parceiros.filter(p=>(!S.pf.cat||p.categoria===S.pf.cat)&&(!q||[p.nome,p.categoria,p.cidade,p.endereco].join(' ').toLowerCase().includes(q)));
@@ -836,26 +1093,27 @@ tabsMembro.hist=async()=>{
   const v=$('#view');v.innerHTML=skl();
   let h;try{h=await tk('nvd_membro_historico')}catch(e){return erroView(v,e)}
   v.innerHTML=`<div class="head"><h2>Meus usos</h2></div>
-    <div class="list">${h.usos.length?h.usos.map(u=>`<div class="row"><div class="grow"><b>${esc(u.parceiro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}</small></div>${u.estornado?'<span class="pill mut">Estornado</span>':''}</div>`).join(''):vazio('clock','Você ainda não usou nenhum benefício.')}</div>`;
+    <div class="list">${h.usos.length?h.usos.map(u=>`<div class="row"><div class="grow"><b>${esc(u.parceiro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}</small>${u.conta_centavos!=null?`<small>Conta ${brl(u.conta_centavos)} · desconto <b style="display:inline;color:var(--green)">${brl(u.desconto_centavos)}</b> · você pagou <b style="display:inline">${brl(u.pagar_centavos)}</b></small>`:''}</div>${u.estornado?'<span class="pill mut">Estornado</span>':''}</div>`).join(''):vazio('clock','Você ainda não usou nenhum benefício.')}</div>`;
 };
 tabsMembro.conta=()=>{$('#view').innerHTML=viewConta()};
 
 /* =====================================================================
    PARCEIRO (atendente do restaurante ou empresa): confere a carteirinha e registra o uso
    ===================================================================== */
-const PARC_TABS=[['val','Validar','scan'],['usos','Usos','list'],['conta','Conta','user']];
+const PARC_TABS=[['val','Validar','scan'],['usos','Usos','list'],['desc','Descontos','tag'],['conta','Conta','user']];
 const tabsParceiro={};
 function renderParceiro(){
   $('#app').innerHTML=`<div class="app"><header class="top">${marca(S.parceiro?S.parceiro.nome:'')}<div class="grow"></div><button type="button" class="ib" data-act="tema" aria-label="Alternar tema">${ic('sun')}</button></header><main class="view" id="view"></main></div>
   <nav class="tabbar"><div class="tabbar-in">${PARC_TABS.map(([k,t,i])=>`<button type="button" class="tab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span></button>`).join('')}</div></nav>`;
   irTab(S.tab&&PARC_TABS.some(t=>t[0]===S.tab)?S.tab:'val');
+  prepararLeitor();
 }
 tabsParceiro.val=()=>{
   $('#view').innerHTML=`<section class="card"><h2>Validar carteirinha</h2><p class="muted" style="margin-bottom:14px">Peça ao cliente para abrir a carteirinha e escaneie o QR code.</p>
     <button type="button" class="btn big block" data-act="scan">${ic('scan')} Escanear QR code</button>
     <div class="or"><span>ou digite os dados da carteirinha</span></div>
     <form data-form="manual" class="stack">
-      <div class="grid2">${fld('mCod','Código','',{ph:'K7M2-Q9X4',max:200,auto:'off'})}${fld('mPin','PIN','',{ph:'000 000',mode:'numeric',max:7,auto:'off'})}</div>
+      <div class="grid2">${fld('mCod','Código','',{ph:'K7M2-Q9X4',max:200,auto:'off',extra:'autocapitalize="characters" autocorrect="off" spellcheck="false"'})}${fld('mPin','PIN','',{ph:'000 000',mode:'numeric',max:7,auto:'off',extra:'autocorrect="off"'})}</div>
       <button class="btn sec block" type="submit">${ic('keyboard')} Validar</button>
     </form></section><div id="res"></div>`;
 };
@@ -866,14 +1124,33 @@ forms.manual=async()=>{
   if(/^NVD1\./i.test(cod))return validar({p_qr:cod});
   return validar({p_codigo:cod,p_pin:val('mPin')});
 };
+// validar com rede fraca: até 4 tentativas (8, 12, 20 e 25 s) com o MESMO código, progresso na tela e botão pra repetir sem escanear de novo.
+// O servidor aceita o código por alguns minutos e reaproveita a validação aberta, então repetir é seguro.
+const TEMPO_BALCAO=[8000,12000,20000,25000];
 async function validar(args){
   if(!$('#res'))tabsParceiro.val();
-  const res=$('#res');res.innerHTML=skl();
+  S.ultimaValidacao=args;
+  const res=$('#res'),t0=Date.now();
+  res.innerHTML=`<section class="card"><div class="filebox"><span class="spin"></span><div class="grow"><b>Validando carteirinha…</b><small id="valProg">Consultando o servidor</small></div></div></section>`;
   try{
-    const r=await tk('nvd_parceiro_validar',args,{raw:true});
+    const r=await tk('nvd_parceiro_validar',args,{raw:true,tentativas:4,timeout:TEMPO_BALCAO,onTentativa:(i,n)=>{const p=$('#valProg');if(p&&i>1)p.textContent=`Conexão lenta. Tentativa ${i} de ${n}…`}});
     S.val=r;desenharResultado(r);
     vibrar(r.ok?60:[120,60,120]);
-  }catch(e){res.innerHTML=`<div class="banner bad">${ic('alert')}<span>${esc(e.message)}</span></div>`}
+  }catch(e){
+    const seg=Math.round((Date.now()-t0)/1000);
+    res.innerHTML=`<section class="card res bad"><div class="res-h"><div class="res-i">${ic('x')}</div><div class="grow"><b>${e.offline?'Sem conexão estável':'Não foi possível validar'}</b><small>${esc(e.message)}${e.offline?` · ${seg} s`:''}</small></div></div>
+      ${e.offline?'<p class="muted">O código do cliente continua valendo por alguns minutos. Toque em "Tentar de novo" quando o sinal voltar: não precisa escanear outra vez.</p>':''}
+      <div class="stack" style="margin-top:14px"><button type="button" class="btn block" data-act="revalidar">${ic('refresh')} Tentar de novo</button><button type="button" class="btn sec block" data-act="nova-val">Nova validação</button></div></section>`;
+  }
+}
+acoes.revalidar=()=>S.ultimaValidacao&&validar(S.ultimaValidacao);
+// prepara o leitor de QR enquanto há sinal: se o navegador não tem leitor nativo, baixa o de reserva agora e o app guarda em cache
+function prepararLeitor(){
+  setTimeout(async()=>{
+    let nativo=false;
+    try{nativo='BarcodeDetector' in window&&(await BarcodeDetector.getSupportedFormats()).includes('qr_code')}catch(e){}
+    if(!nativo)carregarJsQR().catch(()=>{});
+  },3000);
 }
 function desenharResultado(r){
   const res=$('#res');
@@ -888,38 +1165,71 @@ function desenharResultado(r){
     <h3>Qual benefício será usado?</h3>
     ${r.beneficios.length?r.beneficios.map(b=>{
       const rest=Math.max(b.limite_qtd-(b.usados||0),0),off=rest===0;
-      return `<label class="opt ${off?'off':''}"><input type="radio" name="ben" value="${esc(b.id)}" ${off?'disabled':''}><div class="grow"><b>${esc(b.titulo)}</b>${b.regras?`<small>${esc(b.regras)}</small>`:''}<small>${off?`<b style="display:inline;color:var(--red)">Limite atingido ${esc(LIMITE_TXT[b.limite_periodo])}</b>`:`Restam ${rest} de ${b.limite_qtd} ${esc(LIMITE_TXT[b.limite_periodo])}`}</small></div></label>`}).join('')
+      return `<label class="opt ${off?'off':''}"><input type="radio" name="ben" value="${esc(b.id)}" ${off?'disabled':''}><div class="grow"><span class="chip" style="margin-bottom:4px">${esc(resumoBenef(b))}</span><b>${esc(b.titulo)}</b><small>${esc(textoBenef(b.tipo,b.valor))}</small>${b.regras?`<small>${esc(b.regras)}</small>`:''}<small>${off?`<b style="display:inline;color:var(--red)">Limite atingido ${esc(LIMITE_TXT[b.limite_periodo])}</b>`:`Restam ${rest} de ${b.limite_qtd} ${esc(LIMITE_TXT[b.limite_periodo])}`}</small></div></label>`}).join('')
       :'<p class="muted">Este estabelecimento ainda não tem benefício ativo.</p>'}
-    <div class="field" style="margin:14px 0"><label for="vConta">Valor da conta em R$ (opcional)</label><input id="vConta" inputmode="decimal" placeholder="0,00"></div>
+    <div id="calcBox" style="margin:14px 0">
+      <div class="field"><label for="vConta">Valor da conta (R$)</label><input id="vConta" inputmode="decimal" placeholder="0,00" autocomplete="off"><small id="vContaDica"></small></div>
+      <div class="field" id="boxItem" hidden style="margin-top:10px"><label for="vItem">Valor do prato de menor preço (o que sai de graça)</label><input id="vItem" inputmode="decimal" placeholder="0,00" autocomplete="off"></div>
+      <div class="field" id="boxDesc" hidden style="margin-top:10px"><label for="vDesc">Desconto concedido (R$)</label><input id="vDesc" inputmode="decimal" placeholder="0,00" autocomplete="off"></div>
+      <div class="calc" id="calcPrev" hidden></div>
+    </div>
     <button type="button" class="btn ok block" data-act="confirmar-uso">${ic('check')} Confirmar uso</button>
     <button type="button" class="btn sec block" style="margin-top:10px" data-act="nova-val">Cancelar</button></section>`;
   // pré-seleciona o primeiro benefício disponível: no caso comum (um benefício só) é um toque
   const primeiro=res.querySelector('input[name=ben]:not(:disabled)');if(primeiro)primeiro.checked=true;
+  atualizarCalc();
 }
+const benefSel=()=>{const r=$('input[name=ben]:checked');return r&&S.val&&S.val.beneficios?S.val.beneficios.find(b=>b.id===r.value):null};
+const centavos=n=>n==null||Number.isNaN(n)?null:Math.round(n*100);
+// prévia do desconto enquanto o atendente digita (o servidor recalcula e é o número oficial)
+function atualizarCalc(){
+  if(!$('#calcBox'))return;
+  const b=benefSel(),tipo=b?b.tipo:null;
+  $('#boxItem').hidden=tipo!=='2x1';$('#boxDesc').hidden=tipo!=='outro';
+  $('#vContaDica').textContent=tipo==='brinde'||tipo==='outro'?'Opcional para este benefício.':'Necessário para calcular o desconto.';
+  const prev=$('#calcPrev');if(!b){prev.hidden=true;return}
+  const conta=parseValor($('#vConta').value);
+  if(conta==null||Number.isNaN(conta)){prev.hidden=true;return}
+  const c=calcularLocal(b.tipo,b.valor,centavos(conta),centavos(parseValor($('#vItem').value)),centavos(parseValor($('#vDesc').value)));
+  prev.hidden=false;prev.classList.toggle('erro',!!c.erro);
+  prev.innerHTML=c.erro?esc(c.erro):`<div class="kv" style="border:0;padding:0"><span>Desconto</span><b style="color:var(--green)">− ${brl(c.desconto)}</b></div><div class="rs-pagar"><small>Cliente paga</small><strong>${brl(c.pagar)}</strong></div>`;
+}
+document.addEventListener('input',e=>{if(e.target.id==='vConta'||e.target.id==='vItem'||e.target.id==='vDesc')atualizarCalc()});
+document.addEventListener('change',e=>{if(e.target.name==='ben')atualizarCalc()});
 acoes['confirmar-uso']=async el=>{
-  const ben=$('input[name=ben]:checked');if(!ben)return toast('Escolha o benefício.','erro');
-  const valor=parseValor($('#vConta').value);if(Number.isNaN(valor))return toast('Valor da conta inválido.','erro');
-  el.disabled=true;
+  const ben=$('input[name=ben]:checked'),b=benefSel();if(!ben||!b)return toast('Escolha o benefício.','erro');
+  const conta=parseValor($('#vConta').value),item=parseValor($('#vItem').value),man=parseValor($('#vDesc').value);
+  if([conta,item,man].some(x=>Number.isNaN(x)))return toast('Confira os valores digitados.','erro');
+  const c=calcularLocal(b.tipo,b.valor,centavos(conta),centavos(item),centavos(man));
+  if(c.erro)return toast(c.erro,'erro');
+  el.disabled=true;const rotulo=el.innerHTML;
   try{
-    const r=await tk('nvd_parceiro_confirmar_uso',{p_validacao_id:S.val.validacao_id,p_beneficio_id:ben.value,p_valor_conta:valor},{raw:true});
-    if(!r.ok){toast(r.erro,'erro');el.disabled=false;return}
+    // pode repetir sem medo: se a 1ª resposta se perder na rede, o servidor devolve o mesmo uso em vez de registrar de novo
+    const r=await tk('nvd_parceiro_confirmar_uso',{p_validacao_id:S.val.validacao_id,p_beneficio_id:ben.value,p_valor_conta:conta,p_valor_item:b.tipo==='2x1'?item:null,p_desconto_manual:b.tipo==='outro'?man:null},
+      {raw:true,tentativas:4,timeout:TEMPO_BALCAO,onTentativa:(i,n)=>{el.innerHTML=i>1?`<span class="spin"></span> Conexão lenta… tentativa ${i} de ${n}`:'<span class="spin"></span> Confirmando…'}});
+    if(!r.ok){toast(r.erro,'erro');el.disabled=false;el.innerHTML=rotulo;return}
     vibrar(80);
-    $('#res').innerHTML=`<section class="card res ok" style="text-align:center"><div class="res-i" style="margin:0 auto 10px;width:64px;height:64px">${ic('check')}</div><h2>Uso registrado</h2>
-      <p class="muted" style="margin:6px 0 16px">${esc(r.membro)} · ${esc(r.beneficio)}<br>Restam ${r.restantes} ${esc(LIMITE_TXT[r.limite_periodo])}.</p>
+    // mesmo resumo que o cliente recebe no celular dele neste instante
+    $('#res').innerHTML=`<section class="card res ok"><div class="res-h"><div class="res-i">${ic('check')}</div><div class="grow"><b style="font-size:1.1rem">Uso registrado</b><small>${esc(r.membro)} · restam ${r.restantes} ${esc(LIMITE_TXT[r.limite_periodo])}</small></div></div>
+      ${resumoUsoHtml(r,'parceiro')}
+      <p class="muted" style="font-size:.8rem;margin:10px 0 14px">O cliente está vendo este mesmo resumo no celular dele.</p>
       <button type="button" class="btn block" data-act="nova-val">Nova validação</button></section>`;
-  }catch(e){el.disabled=false;throw e}
+  }catch(e){el.disabled=false;el.innerHTML=rotulo;if(e.offline)e.message+=' Toque em Confirmar de novo: o uso não é registrado duas vezes.';throw e}
 };
 
 /* --- leitor de QR pela câmera --- */
 let scanEstado=null;
+let jsqrP=null;
 function carregarJsQR(){
   if(window.jsQR)return Promise.resolve();
-  return new Promise((ok,falha)=>{
+  if(jsqrP)return jsqrP; // o pré-carregamento e o botão de escanear não baixam duas vezes
+  jsqrP=new Promise((ok,falha)=>{
     const s=document.createElement('script');
     s.src='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';s.integrity='sha256-vEDIoVGWI2sjFNsIVvcsoLSZgM1UE7jIUqc0n1/uCFk=';s.crossOrigin='anonymous';
-    s.onload=()=>window.jsQR?ok():falha(new Error('jsQR'));s.onerror=()=>falha(new Error('jsQR'));
+    s.onload=()=>window.jsQR?ok():falha(new Error('jsQR'));s.onerror=()=>{s.remove();falha(new Error('jsQR'))};
     document.head.appendChild(s);
-  });
+  }).catch(e=>{jsqrP=null;throw e});
+  return jsqrP;
 }
 function fecharScanner(){
   if(scanEstado){clearInterval(scanEstado.timer);scanEstado.stream.getTracks().forEach(t=>t.stop());scanEstado=null}
@@ -964,14 +1274,87 @@ acoes.scan=async()=>{
 tabsParceiro.usos=async()=>{
   const v=$('#view');v.innerHTML=skl();
   let r;try{r=await tk('nvd_parceiro_resumo')}catch(e){return erroView(v,e)}
-  v.innerHTML=`<div class="kpis" style="grid-template-columns:1fr 1fr"><div class="kpi"><small>Hoje</small><b>${r.stats.hoje}</b></div><div class="kpi"><small>Este mês</small><b>${r.stats.mes}</b></div></div>
+  const s=r.stats;
+  v.innerHTML=`<div class="kpis" style="grid-template-columns:1fr 1fr">
+    <div class="kpi"><small>Usos hoje</small><b>${s.hoje}</b></div><div class="kpi"><small>Usos no mês</small><b>${s.mes}</b></div>
+    <div class="kpi"><small>Descontos hoje</small><b>${brl(s.desconto_hoje_centavos)}</b></div><div class="kpi"><small>Descontos no mês</small><b>${brl(s.desconto_mes_centavos)}</b></div>
+    <div class="kpi"><small>Recebido hoje</small><b>${brl(s.recebido_hoje_centavos)}</b></div><div class="kpi"><small>Recebido no mês</small><b>${brl(s.recebido_mes_centavos)}</b></div></div>
+    <p class="muted" style="font-size:.78rem;margin:-4px 0 14px">Descontos concedidos e o que os clientes do clube pagaram já com o desconto. Só entram os usos com o valor da conta informado.</p>
     <div class="head"><h2>Últimos usos</h2></div>
-    <div class="list">${r.usos.length?r.usos.map(u=>`<div class="row" ${u.estornado?'style="opacity:.55"':''}><div class="grow"><b>${esc(u.membro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}${u.valor_conta_centavos!=null?' · conta '+brl(u.valor_conta_centavos):''}</small></div>${u.estornado?'<span class="pill mut">Estornado</span>':u.pode_estornar?`<button type="button" class="btn danger sm" data-act="estornar" data-id="${esc(u.id)}">Estornar</button>`:''}</div>`).join(''):vazio('list','Nenhum uso registrado ainda.')}</div>
+    <div class="list">${r.usos.length?r.usos.map(u=>`<div class="row" ${u.estornado?'style="opacity:.55"':''}><div class="grow"><b>${esc(u.membro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}${u.valor_conta_centavos!=null?` · conta ${brl(u.valor_conta_centavos)} · desconto ${brl(u.desconto_centavos)} · pagou ${brl(u.valor_pagar_centavos)}`:''}</small></div>${u.estornado?'<span class="pill mut">Estornado</span>':u.pode_estornar?`<button type="button" class="btn danger sm" data-act="estornar" data-id="${esc(u.id)}">Estornar</button>`:''}</div>`).join(''):vazio('list','Nenhum uso registrado ainda.')}</div>
     <p class="muted" style="font-size:.78rem;margin-top:12px">Um uso pode ser estornado em até 60 minutos, caso tenha sido registrado por engano.</p>`;
 };
 acoes.estornar=async el=>{
   if(!confirm('Estornar este uso? O cliente poderá usar o benefício de novo.'))return;
   await tk('nvd_parceiro_estornar_uso',{p_uso_id:el.dataset.id});toast('Uso estornado.','ok');tabsParceiro.usos();
+};
+/* --- Descontos: o estabelecimento propõe, o administrador aprova --- */
+function linhaProposta(p){
+  const d=p.dados,rec=p.status==='recusada';
+  return `<div class="row" style="flex-wrap:wrap;align-items:flex-start"><span class="chip">${esc(resumoBenef(d))}</span>
+    <div class="grow"><b>${esc(d.titulo)}</b><small>${p.beneficio_id?'Alteração de um desconto no ar':'Desconto novo'} · ${d.limite_qtd} uso(s) ${esc(LIMITE_TXT[d.limite_periodo])}</small>${d.regras?`<small>${esc(d.regras)}</small>`:''}
+      ${rec?`<small style="color:var(--red)"><b style="display:inline">Recusado:</b> ${esc(p.motivo_recusa||'')}</small>`:`<small>Aguardando o administrador · enviado ${esc(ha(p.atualizado_em))}</small>`}</div>
+    <div style="display:flex;gap:8px;width:100%;margin-top:6px;flex-wrap:wrap"><button type="button" class="btn sec sm" data-act="dc-editar" data-id="${esc(p.id)}">${rec?'Corrigir e reenviar':'Editar'}</button><button type="button" class="btn danger sm" data-act="dc-retirar" data-id="${esc(p.id)}">${rec?'Descartar':'Retirar pedido'}</button></div></div>`;
+}
+function linhaDesconto(b){
+  const st=!b.ativo?['bad','Desativado pelo administrador']:b.pausado?['warn','Pausado por você']:['ok','No ar'];
+  return `<div class="row" style="flex-wrap:wrap;align-items:flex-start"><span class="chip">${esc(resumoBenef(b))}</span>
+    <div class="grow"><b>${esc(b.titulo)}</b><small>${b.limite_qtd} uso(s) ${esc(LIMITE_TXT[b.limite_periodo])} · ${b.usos_mes} uso(s) neste mês</small>${b.regras?`<small>${esc(b.regras)}</small>`:''}${b.alteracao_pendente?'<small style="color:var(--amber)">Alteração aguardando aprovação</small>':''}</div>
+    <span class="pill ${st[0]}">${esc(st[1])}</span>
+    <div style="display:flex;gap:8px;width:100%;margin-top:6px;flex-wrap:wrap">${b.ativo?`<button type="button" class="btn sec sm" data-act="dc-pausar" data-id="${esc(b.id)}" data-p="${b.pausado?0:1}">${b.pausado?'Retomar':'Pausar'}</button>`:''}
+      <button type="button" class="btn sec sm" data-act="dc-alterar" data-id="${esc(b.id)}" ${b.alteracao_pendente?'disabled':''}>Solicitar alteração</button></div></div>`;
+}
+tabsParceiro.desc=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_parceiro_descontos')}catch(e){return erroView(v,e)}
+  if(S.tab!=='desc')return;
+  S.desc=r;
+  const pend=r.propostas.filter(p=>p.status==='pendente'),rec=r.propostas.filter(p=>p.status==='recusada');
+  v.innerHTML=`<div class="head"><h2>Descontos</h2><div class="grow"></div><button type="button" class="btn sm" data-act="dc-novo">${ic('plus')} Novo</button></div>
+    <div class="banner info">${ic('alert')}<span>Descontos novos e alterações só entram no ar depois que o administrador aprovar.</span></div>
+    ${pend.length?`<h3 style="margin:6px 0 10px">Aguardando aprovação</h3><div class="list" style="margin-bottom:18px">${pend.map(linhaProposta).join('')}</div>`:''}
+    ${rec.length?`<h3 style="margin:6px 0 10px">Recusados</h3><div class="list" style="margin-bottom:18px">${rec.map(linhaProposta).join('')}</div>`:''}
+    <h3 style="margin:6px 0 10px">No ar</h3><div class="list">${r.beneficios.length?r.beneficios.map(linhaDesconto).join(''):vazio('tag','Nenhum desconto no ar ainda. Toque em Novo para propor o primeiro.')}</div>`;
+};
+function ajustarTipoDesconto(){
+  const t=$('#dsTipo');if(!t)return;
+  const usa=t.value==='percentual'||t.value==='valor_fixo';
+  $('#dsValorBox').hidden=!usa;
+  $('#dsValorLbl').textContent=t.value==='percentual'?'Percentual de desconto (%)':'Valor do desconto (R$)';
+  $('#dsValor').placeholder=t.value==='percentual'?'Ex.: 20':'Ex.: 15,00';
+}
+document.addEventListener('change',e=>{if(e.target.id==='dsTipo')ajustarTipoDesconto()});
+function sheetDesconto(d,ctx){
+  d=d||{};
+  abrirSheet(`<form data-form="dc-salvar" data-proposta="${esc(ctx.proposta||'')}" data-benef="${esc(ctx.beneficio||'')}" class="stack">
+    ${ctx.beneficio?`<div class="banner info" style="margin:0">${ic('alert')}<span>O desconto atual continua valendo até o administrador aprovar a alteração.</span></div>`:''}
+    ${fld('dsTitulo','Desconto',d.titulo||'',{max:120,ph:'Ex.: 2 pratos principais pelo preço de 1'})}
+    ${sel('dsTipo','Tipo',TIPOS_BENEF,d.tipo||'2x1')}
+    <div class="field" id="dsValorBox"><label for="dsValor" id="dsValorLbl">Valor</label><input id="dsValor" inputmode="decimal" value="${esc(d.valor!=null?String(d.valor).replace('.',','):'')}" autocomplete="off"></div>
+    ${fld('dsRegras','Regras (opcional)',d.regras||'',{area:1,max:500,ph:'Ex.: Válido de segunda a quinta, exceto feriados.'})}
+    <div class="grid2">${fld('dsQtd','Usos por cliente',String(d.limite_qtd||1),{mode:'numeric'})}${sel('dsPer','A cada',[['dia','Dia'],['semana','Semana'],['mes','Mês'],['sempre','Sem renovar (total)']],d.limite_periodo||'mes')}</div>
+    <button class="btn block" type="submit">Enviar para aprovação</button>
+    <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,ctx.titulo||'Novo desconto');
+  ajustarTipoDesconto();
+}
+acoes['dc-novo']=()=>sheetDesconto(null,{titulo:'Novo desconto'});
+acoes['dc-editar']=el=>{const p=S.desc.propostas.find(x=>x.id===el.dataset.id);if(p)sheetDesconto(p.dados,{proposta:p.id,beneficio:p.beneficio_id,titulo:p.status==='recusada'?'Corrigir e reenviar':'Editar pedido'})};
+acoes['dc-alterar']=el=>{const b=S.desc.beneficios.find(x=>x.id===el.dataset.id);if(b)sheetDesconto({titulo:b.titulo,tipo:b.tipo,valor:b.valor,regras:b.regras,limite_qtd:b.limite_qtd,limite_periodo:b.limite_periodo},{beneficio:b.id,titulo:'Solicitar alteração'})};
+forms['dc-salvar']=async f=>{
+  const tipo=val('dsTipo'),usa=tipo==='percentual'||tipo==='valor_fixo',valor=usa?parseValor(val('dsValor')):null;
+  if(usa&&(valor==null||Number.isNaN(valor)))return toast('Informe o valor do desconto.','erro');
+  await tk('nvd_parceiro_desconto_propor',{p_dados:{titulo:val('dsTitulo'),tipo,valor,regras:val('dsRegras'),limite_qtd:parseInt(val('dsQtd'),10)||1,limite_periodo:val('dsPer')},p_beneficio_id:f.dataset.benef||null,p_proposta_id:f.dataset.proposta||null});
+  fecharSheet();toast('Enviado para aprovação do administrador.','ok');tabsParceiro.desc();
+};
+acoes['dc-retirar']=async el=>{
+  if(!confirm('Retirar este pedido? Ele deixa de ir para aprovação.'))return;
+  await tk('nvd_parceiro_desconto_retirar',{p_proposta_id:el.dataset.id});toast('Pedido retirado.','ok');tabsParceiro.desc();
+};
+// pausar/retomar não muda os termos aprovados, então vale na hora; só o administrador desativa de vez
+acoes['dc-pausar']=async el=>{
+  const pausar=el.dataset.p==='1';
+  await tk('nvd_parceiro_desconto_pausar',{p_beneficio_id:el.dataset.id,p_pausar:pausar});
+  toast(pausar?'Desconto pausado: o cliente não consegue usar até você retomar.':'Desconto retomado.','ok');tabsParceiro.desc();
 };
 tabsParceiro.conta=()=>{
   $('#view').innerHTML=viewConta(`<section class="card"><h3>Estabelecimento</h3><p><b>${esc(S.parceiro?S.parceiro.nome:'—')}</b></p><p class="muted">${esc(S.parceiro?S.parceiro.categoria:'')}</p></section>`);
@@ -979,14 +1362,16 @@ tabsParceiro.conta=()=>{
 /* =====================================================================
    ADMIN: pagamentos (Pix manual), membros, parceiros, planos, acessos
    ===================================================================== */
-const ADMIN_TABS=[['painel','Painel','grid'],['pagtos','Pagamentos','dollar'],['comps','Comprovantes','paperclip'],['membros','Membros','users'],['parceiros','Parceiros','store'],['planos','Planos','tag'],['usos','Usos','list'],['acessos','Acessos','shield'],['config','Config','sliders'],['conta','Conta','user']];
+const ADMIN_TABS=[['painel','Painel','grid'],['pagtos','Pagamentos','dollar'],['comps','Comprovantes','paperclip'],['aprov','Aprovações','check'],['membros','Membros','users'],['parceiros','Parceiros','store'],['planos','Planos','tag'],['usos','Usos','list'],['acessos','Acessos','shield'],['config','Config','sliders'],['conta','Conta','user']];
 const tabsAdmin={};
 const METODOS={pix_manual:'Pix manual',pix:'Pix',cartao:'Cartão',boleto:'Boleto',cortesia:'Cortesia'};
 const CATS=['Restaurante','Bar','Pizzaria','Hamburgueria','Cafeteria','Padaria','Sorveteria','Japonês','Churrascaria','Doceria','Academia','Estética','Saúde','Lazer','Serviços','Outros'];
 function renderAdmin(){
   $('#app').innerHTML=`<div class="app"><header class="top">${marca('Administração')}<div class="grow"></div><button type="button" class="ib" data-act="tema" aria-label="Alternar tema">${ic('sun')}</button></header>
-    <nav class="atabs" id="atabs">${ADMIN_TABS.map(([k,t,i])=>`<button type="button" class="atab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span>${k==='pagtos'?'<span class="n" id="nEst" hidden></span>':k==='comps'?'<span class="n" id="nComp" hidden></span>':''}</button>`).join('')}</nav>
+    <div class="atabs-wrap" id="atabsWrap"><button type="button" class="atabs-seta esq" id="atabsEsq" data-act="tabs-rolar" data-d="-1" aria-label="Rolar o menu para a esquerda" hidden>${ic('chevron')}</button>
+    <nav class="atabs" id="atabs">${ADMIN_TABS.map(([k,t,i])=>`<button type="button" class="atab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span>${k==='pagtos'?'<span class="n" id="nEst" hidden></span>':k==='comps'?'<span class="n" id="nComp" hidden></span>':k==='aprov'?'<span class="n" id="nAprov" hidden></span>':''}</button>`).join('')}</nav><button type="button" class="atabs-seta dir" id="atabsDir" data-act="tabs-rolar" data-d="1" aria-label="Rolar o menu para a direita" hidden>${ic('chevron')}</button></div>
     <main class="view" id="view"></main></div>`;
+  ligarSetasMenu();
   irTab(S.tab&&ADMIN_TABS.some(t=>t[0]===S.tab)?S.tab:'painel');
   atualizarPendentes();
 }
@@ -994,7 +1379,7 @@ function renderAdmin(){
 async function atualizarPendentes(){
   try{
     const p=await tk('nvd_admin_painel'),set=(id,n)=>{const e=$('#'+id);if(e){e.textContent=n;e.hidden=!(n>0)}};
-    set('nEst',p.estornos_pendentes);set('nComp',p.pendentes_com_comprovante);
+    set('nEst',p.estornos_pendentes);set('nComp',p.pendentes_com_comprovante);set('nAprov',p.aprovacoes_pendentes);
   }catch(e){}
 }
 function statusMembro(m){
@@ -1014,6 +1399,7 @@ tabsAdmin.painel=async()=>{
     <button type="button" class="kpi ${p.pendentes?'hot':''}" data-act="tab" data-t="pagtos" style="font:inherit;color:inherit;text-align:left;cursor:pointer"><small>Pagamentos a confirmar</small><b>${p.pendentes}</b></button>
     <button type="button" class="kpi ${p.pendentes_com_comprovante?'hot':''}" data-act="tab" data-t="comps" style="font:inherit;color:inherit;text-align:left;cursor:pointer"><small>Comprovantes a conferir</small><b>${p.pendentes_com_comprovante}</b></button>
     <button type="button" class="kpi ${p.estornos_pendentes?'hot':''}" data-act="ir-estornos" style="font:inherit;color:inherit;text-align:left;cursor:pointer"><small>Estornos a decidir</small><b>${p.estornos_pendentes}</b></button>
+    <button type="button" class="kpi ${p.aprovacoes_pendentes?'hot':''}" data-act="tab" data-t="aprov" style="font:inherit;color:inherit;text-align:left;cursor:pointer"><small>Descontos a aprovar</small><b>${p.aprovacoes_pendentes}</b></button>
     <div class="kpi"><small>Receita confirmada no mês</small><b>${brl(p.receita_mes_centavos)}</b></div>
     <div class="kpi"><small>Devolvido no mês</small><b>${brl(p.devolvido_mes_centavos)}</b></div>
     <div class="kpi"><small>Usos no mês</small><b>${p.usos_mes}</b></div>
@@ -1028,7 +1414,7 @@ const ST_PG={pendente:['warn','Pendente'],pago:['ok','Pago'],cancelado:['mut','C
 const guardarPg=lista=>lista.forEach(g=>S.pg.set(g.id,g));
 const telaLarga=()=>window.matchMedia('(min-width:900px)').matches;
 function recarregarAdmin(){
-  if(S.tab==='pagtos')tabsAdmin.pagtos();else if(S.tab==='comps')tabsAdmin.comps();
+  if(S.tab==='pagtos')tabsAdmin.pagtos();else if(S.tab==='comps')tabsAdmin.comps();else if(S.tab==='aprov')tabsAdmin.aprov();
   atualizarPendentes();
 }
 
@@ -1040,6 +1426,7 @@ function detalhesPg(g){
   if(g.estorno_status==='solicitado')l.push(`<span style="color:var(--blue)"><b style="display:inline">Estorno solicitado</b> ${esc(ha(g.estorno_solicitado_em))}: “${esc(g.estorno_motivo||'')}”</span>`);
   if(g.estorno_status==='recusado')l.push(`Estorno recusado${g.estorno_resposta?': “'+esc(g.estorno_resposta)+'”':''}`);
   if(g.status==='devolvido')l.push(`Devolvido <b style="display:inline">${brl(g.devolvido_valor_centavos)}</b> em ${esc(dth(g.devolvido_em))}${g.devolucao_removeu_dias?' · dias removidos da carteirinha':''}${g.devolucao_obs?' · “'+esc(g.devolucao_obs)+'”':''}`);
+  if(g.status==='devolvido'&&g.devolucao_comprovante_nome)l.push(`<span style="color:var(--green)">${ic('paperclip','sm')} Comprovante da devolução anexado</span>`);
   return l.map(t=>`<small>${t}</small>`).join('');
 }
 // botões de ação conforme o estado do pagamento (mesmos na lista e no visualizador)
@@ -1052,6 +1439,10 @@ function botoesPg(g){
   }
   if(g.status==='pago'||g.estorno_status==='solicitado')b.push(`<button type="button" class="btn ${g.estorno_status==='solicitado'?'ok':'sec'} sm" data-act="pag-devolver" data-id="${id}">${ic('refresh')} Devolver</button>`);
   if(g.estorno_status==='solicitado')b.push(`<button type="button" class="btn danger sm" data-act="est-recusar" data-id="${id}">Recusar estorno</button>`);
+  if(g.status==='devolvido'){
+    if(g.devolucao_comprovante_nome)b.push(`<button type="button" class="btn sec sm" data-act="dev-ver" data-id="${id}">${ic('eye')} Ver comprovante da devolução</button>`);
+    b.push(`<button type="button" class="btn sec sm" data-act="dev-anexar" data-id="${id}">${ic('upload')} ${g.devolucao_comprovante_nome?'Trocar':'Anexar'} comprovante da devolução</button>`);
+  }
   return b.join('');
 }
 
@@ -1116,8 +1507,10 @@ acoes['pag-devolver']=el=>{
     ${fld('dvValor','Valor devolvido (R$)',(g.valor_centavos/100).toFixed(2).replace('.',','),{mode:'decimal'})}
     ${g.status==='pago'?`<div class="field chk"><input type="checkbox" id="dvDias" checked><label for="dvDias">Remover da carteirinha os ${g.periodo_dias} dias que este pagamento liberou (se não sobrar plano, ela é encerrada agora)</label></div>`:''}
     ${fld('dvObs','Observação (opcional)','',{area:1,max:300,ph:'Ex.: identificador do Pix da devolução'})}
+    <div class="field"><label>Comprovante da devolução (opcional)</label><input type="file" id="fDev" accept="image/*,application/pdf" hidden><div id="devArea"></div><small>Foto, print ou PDF do Pix de volta (até 5 MB). O cliente também poderá ver.</small></div>
     <button class="btn block" type="submit">Registrar devolução</button>
     <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,'Registrar devolução');
+  limparPreviaDev();desenharDev();
 };
 forms['pag-devolver-ok']=async f=>{
   const g=S.pg.get(f.dataset.id),v=parseValor(val('dvValor'));
@@ -1126,7 +1519,75 @@ forms['pag-devolver-ok']=async f=>{
   if(!confirm(`Registrar a devolução de ${brl(cent)} para ${g.membro_nome}? Não dá pra desfazer.`))return;
   const chk=document.getElementById('dvDias');
   await tk('nvd_admin_pagamento_devolver',{p_pagamento_id:g.id,p_valor_centavos:cent,p_obs:val('dvObs'),p_remover_dias:!!(chk&&chk.checked)});
-  fecharSheet();toast('Devolução registrada.','ok');recarregarAdmin();
+  // a devolução já está registrada; se o arquivo falhar, o admin anexa de novo depois sem refazer nada
+  let aviso='Devolução registrada.',tipo='ok';
+  if(S.devArq){
+    try{await enviarDevolucaoArquivo(g.id,S.devArq);aviso='Devolução registrada com o comprovante.'}
+    catch(e){aviso='Devolução registrada, mas o comprovante não foi enviado: '+e.message+' Anexe de novo pela lista de pagamentos.';tipo='erro'}
+  }
+  limparPreviaDev();fecharSheet();toast(aviso,tipo);recarregarAdmin();
+};
+
+/* --- comprovante da devolução: o admin anexa a prova do Pix de volta e o cliente também consegue ver --- */
+function limparPreviaDev(){if(S.devUrl){URL.revokeObjectURL(S.devUrl);S.devUrl=null}S.devArq=null}
+function desenharDev(){
+  const a=$('#devArea');if(!a)return;
+  const f=S.devArq;
+  a.innerHTML=f
+    ?`<div class="filebox"><div class="th">${S.devUrl?`<img src="${esc(S.devUrl)}" alt="Prévia do comprovante">`:ic('file')}</div><div class="grow"><b style="overflow-wrap:anywhere">${esc(f.name)}</b><small>${esc(tamTxt(f.size))}</small></div><button type="button" class="ib" data-act="dev-remover" aria-label="Remover arquivo">${ic('x')}</button></div>`
+    :`<button type="button" class="btn sec sm" data-act="dev-escolher">${ic('upload')} Anexar comprovante da devolução</button>`;
+}
+acoes['dev-escolher']=()=>{const i=$('#fDev');if(i)i.click()};
+acoes['dev-remover']=()=>{limparPreviaDev();desenharDev()};
+document.addEventListener('change',async e=>{
+  if(e.target.id!=='fDev')return;
+  const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+  limparPreviaDev();
+  try{S.devArq=await prepararArquivo(f);if(/^image\//.test(S.devArq.type))S.devUrl=URL.createObjectURL(S.devArq)}catch(err){toast(err.message,'erro')}
+  desenharDev();
+});
+async function enviarDevolucaoArquivo(pagId,f){
+  const fd=new FormData();fd.append('acao','devolucao');fd.append('token',S.token);fd.append('pagamento_id',pagId);fd.append('arquivo',f,f.name);
+  const {status,dados}=await enviarArquivo(FN_COMPROVANTE,fd,()=>{});
+  if(status===401){sessaoExpirou();throw new Error('Sua sessão expirou.')}
+  if(!dados||dados.ok!==true)throw new Error((dados&&dados.erro)||'Não foi possível enviar o arquivo.');
+}
+// anexar (ou trocar) depois, em um pagamento que já foi devolvido
+acoes['dev-anexar']=el=>{
+  const g=S.pg.get(el.dataset.id);if(!g)return;
+  abrirSheet(`<form data-form="dev-anexar-ok" data-id="${esc(g.id)}" class="stack">
+    <p class="muted">Comprovante da devolução de <b>${brl(g.devolvido_valor_centavos)}</b> para ${esc(g.membro_nome)}. O cliente também poderá ver este arquivo.</p>
+    <input type="file" id="fDev" accept="image/*,application/pdf" hidden><div id="devArea"></div>
+    <button class="btn block" type="submit">${ic('upload')} Enviar comprovante</button>
+    <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,g.devolucao_comprovante_nome?'Trocar comprovante da devolução':'Anexar comprovante da devolução');
+  limparPreviaDev();desenharDev();
+};
+forms['dev-anexar-ok']=async f=>{
+  if(!S.devArq)return toast('Escolha o arquivo do comprovante.','erro');
+  await enviarDevolucaoArquivo(f.dataset.id,S.devArq);
+  limparPreviaDev();fecharSheet();toast('Comprovante da devolução enviado.','ok');recarregarAdmin();
+};
+// visualizador simples (imagem ou PDF + Baixar/Abrir), usado pelo admin e pelo cliente
+function blocoArquivo(a,nomeBase){
+  const img=/^image\//.test(a.tipo),u=esc(a.blobUrl),nomeArq=`${nomeBase}.${EXT_ARQ[a.tipo]}`;
+  const pdfInline=a.tipo==='application/pdf'&&a.viaBlob&&navigator.pdfViewerEnabled;
+  return `${img?`<a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="Comprovante" referrerpolicy="no-referrer"></a>`
+    :pdfInline?`<iframe class="pdf" src="${u}" title="Comprovante em PDF"></iframe>`
+    :`<div class="filebox"><div class="th">${ic('file')}</div><div class="grow"><b>Comprovante em PDF</b><small>Este navegador não mostra PDF aqui. Use Baixar ou Abrir.</small></div></div>`}
+    <div class="grid2"><a class="btn sec" href="${u}" download="${esc(nomeArq)}">${ic('download')} Baixar</a><a class="btn sec" href="${u}" target="_blank" rel="noopener noreferrer">${ic('eye')} Abrir</a></div>`;
+}
+async function abrirDevolucao(g,titulo,quem){
+  abrirSheet(skl(),titulo);
+  let a;try{a=await arquivoComprovante(g.id,'devolucao')}catch(e){fecharSheet();throw e}
+  if(!$('#sheetB'))return;
+  sheetCorpo(`<div class="viewer stack"><small>${quem==='admin'?esc(g.membro_nome)+' · ':''}devolvido <b style="display:inline">${brl(g.devolvido_valor_centavos)}</b> em ${esc(dth(g.devolvido_em))}${g.devolucao_obs?' · '+esc(g.devolucao_obs):''}</small>
+    ${blocoArquivo(a,`devolucao-${g.referencia}`)}<small>${esc(a.nome)} · ${esc(tamTxt(a.tamanho))} · anexado ${esc(dth(a.em))}</small></div>`);
+}
+acoes['dev-ver']=el=>{const g=S.pg.get(el.dataset.id);if(g)return abrirDevolucao(g,'Comprovante da devolução','admin')};
+// cliente vendo o comprovante da devolução que o administrador anexou
+acoes['dev-ver-cli']=el=>{
+  const g=S.pgto&&S.pgto.pagamentos.find(x=>x.id===el.dataset.id);
+  if(g)return abrirDevolucao({id:g.id,referencia:g.referencia,devolvido_valor_centavos:g.devolvido_valor_centavos,devolvido_em:g.devolvido_em,devolucao_obs:g.devolucao_obs},'Comprovante da devolução','cliente');
 };
 acoes['est-recusar']=el=>{
   const g=S.pg.get(el.dataset.id);if(!g)return;
@@ -1146,14 +1607,15 @@ const TIPOS_ARQ=['image/jpeg','image/png','image/webp','application/pdf'];
 const EXT_ARQ={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','application/pdf':'pdf'};
 function limparArquivos(){S.arq.forEach(o=>{if(o.viaBlob)URL.revokeObjectURL(o.blobUrl)});S.arq.clear()}
 // baixa o arquivo uma vez e serve de um blob local: ver, abrir e baixar funcionam mesmo depois do link temporário (2 min) expirar
-async function arquivoComprovante(id){
-  if(S.arq.has(id))return S.arq.get(id);
-  const r=await fnComprovante({acao:'ver',pagamento_id:id});
+async function arquivoComprovante(id,qual='pagamento'){
+  const chave=qual+':'+id;
+  if(S.arq.has(chave))return S.arq.get(chave);
+  const r=await fnComprovante({acao:qual==='devolucao'?'ver_devolucao':'ver',pagamento_id:id});
   // só tipos da lista branca viram blob: um tipo inesperado (ex.: text/html) executaria script na origem do app
   if(!TIPOS_ARQ.includes(r.tipo))throw new Error('Tipo de arquivo não suportado.');
   let blobUrl=r.url,viaBlob=false;
   try{const resp=await fetch(r.url);if(resp.ok){blobUrl=URL.createObjectURL(new Blob([await resp.arrayBuffer()],{type:r.tipo}));viaBlob=true}}catch(e){}
-  const o={...r,blobUrl,viaBlob};S.arq.set(id,o);return o;
+  const o={...r,blobUrl,viaBlob};S.arq.set(chave,o);return o;
 }
 function viewerHtml(g,a){
   const img=/^image\//.test(a.tipo),nomeArq=`comprovante-${g.referencia}.${EXT_ARQ[a.tipo]}`;
@@ -1203,6 +1665,64 @@ tabsAdmin.comps=async()=>{
       <div class="pane" id="cPane"><div class="empty">${ic('eye')}<p>Selecione um comprovante para visualizar.</p></div></div></div>`;
   // no computador já abre o primeiro da fila: conferir vira "olhar, confirmar, próximo"
   const primeiro=$('#cList .row');if(primeiro&&telaLarga())primeiro.click();
+};
+
+/* --- Aprovações: descontos propostos pelos estabelecimentos --- */
+S.apFiltro='pendentes';S.ap=new Map();
+const ST_AP={pendente:['warn','Pendente'],aprovada:['ok','Aprovada'],recusada:['bad','Recusada']};
+const CAMPOS_DC=[['titulo','Desconto'],['tipo','Tipo'],['valor','Valor'],['limite','Limite por cliente'],['regras','Regras']];
+function valorCampoDc(d,k){
+  if(k==='tipo')return (TIPOS_BENEF.find(t=>t[0]===d.tipo)||[])[1]||d.tipo;
+  if(k==='valor')return d.valor==null?'—':d.tipo==='percentual'?fmtNum(d.valor)+'%':'R$ '+fmtNum(d.valor);
+  if(k==='limite')return `${d.limite_qtd} ${LIMITE_TXT[d.limite_periodo]}`;
+  return d[k]||'—';
+}
+// alteração de desconto no ar: destaca o que muda e risca o valor atual
+function diffDc(novo,atual){
+  return CAMPOS_DC.map(([k,t])=>{
+    const n=valorCampoDc(novo,k),a=atual?valorCampoDc(atual,k):null,mudou=!!atual&&n!==a;
+    return `<div class="kv" ${mudou?'style="background:rgba(233,185,91,.12);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:8px"':''}><span>${t}</span><b>${mudou?`<s style="color:var(--muted2);font-weight:500">${esc(a)}</s> → ${esc(n)}`:esc(n)}</b></div>`;
+  }).join('');
+}
+tabsAdmin.aprov=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_admin_aprovacoes',{p_filtro:S.apFiltro})}catch(e){return erroView(v,e)}
+  if(S.tab!=='aprov')return;
+  S.ap=new Map(r.aprovacoes.map(a=>[a.id,a]));
+  const F=[['pendentes','Pendentes'],['aprovadas','Aprovadas'],['recusadas','Recusadas'],['todas','Todas']];
+  v.innerHTML=`<div class="fchips">${F.map(([k,t])=>`<button type="button" class="fchip ${S.apFiltro===k?'on':''}" data-act="ap-filtro" data-v="${k}">${t}</button>`).join('')}</div>
+    <div class="list">${r.aprovacoes.length?r.aprovacoes.map(a=>{const s=ST_AP[a.status]||['mut',a.status];return `<button type="button" class="row" data-act="ap-abrir" data-id="${esc(a.id)}"><span class="chip">${esc(resumoBenef(a.dados))}</span>
+      <div class="grow"><b>${esc(a.dados.titulo)}</b><small>${esc(a.parceiro_nome)}${a.status==='pendente'?' · '+(a.atual?'Alteração':'Novo desconto'):''} · ${esc(ha(a.atualizado_em))}</small></div><span class="pill ${s[0]}">${s[1]}</span></button>`}).join('')
+      :vazio('check',S.apFiltro==='pendentes'?'Nenhum pedido esperando aprovação.':'Nenhum pedido neste filtro.')}</div>`;
+};
+acoes['ap-filtro']=el=>{S.apFiltro=el.dataset.v;tabsAdmin.aprov()};
+acoes['ap-abrir']=el=>{
+  const a=S.ap.get(el.dataset.id);if(!a)return;
+  const pend=a.status==='pendente',id=esc(a.id);
+  abrirSheet(`<div class="stack"><div><b style="font-size:1.05rem">${esc(a.parceiro_nome)}</b><small>${pend?(a.atual?'Alteração de um desconto no ar':'Desconto novo'):'Pedido de desconto'} · proposto por ${esc(a.proposto_por_nome||'—')} ${esc(ha(a.atualizado_em))}</small></div>
+    <div>${diffDc(a.dados,pend?a.atual:null)}</div>
+    ${pend&&a.atual?'<small>O que muda está destacado; o texto riscado é o valor atual.</small>':''}
+    ${a.status==='recusada'?`<div class="banner bad" style="margin:0">Recusado${a.decidido_por_nome?' por '+esc(a.decidido_por_nome):''}: ${esc(a.motivo_recusa||'')}</div>`:''}
+    ${a.status==='aprovada'?`<div class="banner ok" style="margin:0">Aprovado${a.decidido_por_nome?' por '+esc(a.decidido_por_nome):''} em ${esc(dth(a.decidido_em))}</div>`:''}
+    ${pend?`<button type="button" class="btn ok block" data-act="ap-aprovar" data-id="${id}">${ic('check')} Aprovar</button><button type="button" class="btn danger block" data-act="ap-recusar" data-id="${id}">Recusar</button>`:''}</div>`,'Pedido de desconto');
+};
+acoes['ap-aprovar']=async el=>{
+  const a=S.ap.get(el.dataset.id);if(!a)return;
+  if(!confirm(`Aprovar "${a.dados.titulo}" de ${a.parceiro_nome}? ${a.atual?'A alteração vale imediatamente.':'O desconto entra no ar agora.'}`))return;
+  await tk('nvd_admin_aprovacao_aprovar',{p_proposta_id:a.id});
+  fecharSheet();toast('Aprovado. O desconto já está valendo.','ok');recarregarAdmin();
+};
+acoes['ap-recusar']=el=>{
+  const a=S.ap.get(el.dataset.id);if(!a)return;
+  abrirSheet(`<form data-form="ap-recusar-ok" data-id="${esc(a.id)}" class="stack">
+    <p class="muted">Recusar <b>${esc(a.dados.titulo)}</b> de ${esc(a.parceiro_nome)}? O estabelecimento vê o motivo e pode corrigir e reenviar.</p>
+    ${fld('arMotivo','Motivo da recusa','',{area:1,max:300,ph:'Ex.: Percentual acima do combinado'})}
+    <button class="btn danger block" type="submit">Recusar pedido</button>
+    <button type="button" class="btn sec block" data-act="fechar">Voltar</button></form>`,'Recusar pedido');
+};
+forms['ap-recusar-ok']=async f=>{
+  await tk('nvd_admin_aprovacao_recusar',{p_proposta_id:f.dataset.id,p_motivo:val('arMotivo')});
+  fecharSheet();toast('Pedido recusado.','ok');recarregarAdmin();
 };
 
 /* --- membros --- */
@@ -1285,7 +1805,7 @@ function sheetParceiro(p){
     <button class="btn block" type="submit">${p.id?'Salvar alterações':'Cadastrar estabelecimento'}</button>
   </form>
   ${p.id?`<h3 style="margin:24px 0 10px">Benefícios</h3>
-    <div class="list">${beneficios.length?beneficios.map(b=>`<button type="button" class="row" data-act="ben-edit" data-p="${esc(p.id)}" data-id="${esc(b.id)}"><span class="chip">${esc(resumoBenef(b))}</span><div class="grow"><b>${esc(b.titulo)}</b><small>${b.limite_qtd} uso(s) ${esc(LIMITE_TXT[b.limite_periodo])}${b.ativo?'':' · inativo'}</small></div>${ic('edit')}</button>`).join(''):'<p class="muted">Nenhum benefício ainda. Sem benefício ativo o cliente não consegue usar a carteirinha aqui.</p>'}</div>
+    <div class="list">${beneficios.length?beneficios.map(b=>`<button type="button" class="row" data-act="ben-edit" data-p="${esc(p.id)}" data-id="${esc(b.id)}"><span class="chip">${esc(resumoBenef(b))}</span><div class="grow"><b>${esc(b.titulo)}</b><small>${b.limite_qtd} uso(s) ${esc(LIMITE_TXT[b.limite_periodo])}${b.ativo?'':' · inativo'}${b.pausado?' · pausado pelo estabelecimento':''}</small></div>${ic('edit')}</button>`).join(''):'<p class="muted">Nenhum benefício ainda. Sem benefício ativo o cliente não consegue usar a carteirinha aqui.</p>'}</div>
     <button type="button" class="btn sec block" style="margin-top:10px" data-act="ben-novo" data-p="${esc(p.id)}">${ic('plus')} Adicionar benefício</button>
     <h3 style="margin:24px 0 6px">Acesso do atendente</h3><p class="muted" style="font-size:.86rem">${p.usuarios} acesso(s) criado(s). Crie o login dos atendentes na aba <b>Acessos</b>.</p>
     <button type="button" class="btn danger block" style="margin-top:24px" data-act="parc-excluir" data-id="${esc(p.id)}" data-n="${esc(p.nome)}">${ic('trash')} Excluir estabelecimento</button>`:''}`,p.id?p.nome:'Novo estabelecimento');
@@ -1361,7 +1881,7 @@ forms['plano-salvar']=async f=>{
 tabsAdmin.usos=async()=>{
   const v=$('#view');v.innerHTML=skl();
   let r;try{r=await tk('nvd_admin_usos',{p_limite:150})}catch(e){return erroView(v,e)}
-  v.innerHTML=`<div class="head"><h2>Usos recentes</h2></div><div class="list">${r.usos.length?r.usos.map(u=>`<div class="row" style="${u.estornado_em?'opacity:.55':''}"><div class="grow"><b>${esc(u.parceiro_nome)}</b><small>${esc(u.membro_nome)} · ${esc(fmtCod(u.membro_codigo))}</small><small>${esc(u.beneficio_titulo)} · ${esc(dth(u.criado_em))}${u.valor_conta_centavos!=null?' · conta '+brl(u.valor_conta_centavos):''}${u.registrado_por_nome?' · por '+esc(u.registrado_por_nome):''}</small></div>${u.estornado_em?'<span class="pill mut">Estornado</span>':`<button type="button" class="btn danger sm" data-act="uso-estornar" data-id="${esc(u.id)}">Estornar</button>`}</div>`).join(''):vazio('list','Nenhum uso registrado ainda.')}</div>`;
+  v.innerHTML=`<div class="head"><h2>Usos recentes</h2></div><div class="list">${r.usos.length?r.usos.map(u=>`<div class="row" style="${u.estornado_em?'opacity:.55':''}"><div class="grow"><b>${esc(u.parceiro_nome)}</b><small>${esc(u.membro_nome)} · ${esc(fmtCod(u.membro_codigo))}</small><small>${esc(u.beneficio_titulo)} · ${esc(dth(u.criado_em))}${u.valor_conta_centavos!=null?` · conta ${brl(u.valor_conta_centavos)} · desconto ${brl(u.desconto_centavos)} · pagou ${brl(u.valor_pagar_centavos)}`:''}${u.registrado_por_nome?' · por '+esc(u.registrado_por_nome):''}</small></div>${u.estornado_em?'<span class="pill mut">Estornado</span>':`<button type="button" class="btn danger sm" data-act="uso-estornar" data-id="${esc(u.id)}">Estornar</button>`}</div>`).join(''):vazio('list','Nenhum uso registrado ainda.')}</div>`;
 };
 acoes['uso-estornar']=async el=>{
   if(!confirm('Estornar este uso? O cliente poderá usar o benefício de novo.'))return;
@@ -1429,25 +1949,57 @@ forms.config=async()=>{
 tabsAdmin.conta=()=>{$('#view').innerHTML=viewConta()};
 
 /* ---------- inicialização ---------- */
+// o app guarda uma cópia de si mesmo; quando há versão nova, avisa e o usuário escolhe o momento de atualizar
+function avisoAtualizacao(){
+  if($('#updbar'))return;
+  const b=document.createElement('div');b.id='updbar';
+  b.innerHTML='<span>Nova versão do app disponível.</span><button type="button" class="btn sm" data-act="atualizar-app">Atualizar</button>';
+  document.body.appendChild(b);
+}
+acoes['atualizar-app']=()=>location.reload();
+// o service worker grava a hora em que achou uma versão mais nova que a aberta; se for depois de esta página abrir, o código daqui está velho
+async function verificarAtualizacao(){
+  try{
+    const m=await caches.match(new URL('__novo',location.href).href);
+    if(m&&Number(await m.text())>performance.timeOrigin)avisoAtualizacao();
+  }catch(e){}
+}
+// já entrou neste aparelho: a tela abre na hora com o que está guardado e a sessão é conferida em segundo plano
+async function revalidarSessao(){
+  const token=S.token;
+  try{
+    const r=await tk('nvd_sessao',{},{semLogout:true,tentativas:2});
+    if(S.token!==token)return; // rede lenta: a resposta chegou depois de sair/entrar com outra conta, não vale mais
+    store.set('nvd.perfil',JSON.stringify(r));
+    const mudou=r.usuario.papel!==S.papel;aplicarPerfil(r);if(mudou)entrar();
+  }catch(e){
+    if(S.token!==token)return;
+    if(e.status===401){limparSessao();renderAuth('Sua sessão expirou. Entre novamente.')}
+    else S.offline=true; // sem rede estável: segue com o que já tem
+  }
+}
 async function boot(){
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.tipo==='nova-versao')avisoAtualizacao()});
+    setTimeout(verificarAtualizacao,2500); // a versão nova pode ter sido achada antes de a página começar a ouvir a mensagem
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)verificarAtualizacao()});
+  }
   let sv=null;try{sv=JSON.parse(store.get('nvd.sessao')||'null')}catch(e){}
   if(!sv||!sv.token)return renderAuth();
   S.token=sv.token;
+  let p=null;try{p=JSON.parse(store.get('nvd.perfil')||'null')}catch(_){}
+  if(p&&p.usuario){aplicarPerfil(p);entrar();revalidarSessao();return}
   try{
     const r=await tk('nvd_sessao',{},{semLogout:true});
     aplicarPerfil(r);store.set('nvd.perfil',JSON.stringify(r));entrar();
   }catch(e){
-    if(e.offline){
-      // sem internet: se o cliente já entrou antes neste aparelho, a carteirinha ainda abre (QR é calculado localmente)
-      let p=null;try{p=JSON.parse(store.get('nvd.perfil')||'null')}catch(_){}
-      if(p&&p.usuario&&p.usuario.papel==='membro'){aplicarPerfil(p);S.offline=true;return entrar()}
-      return renderAuth('Sem conexão com a internet.');
-    }
+    if(e.offline)return renderAuth('Sem conexão estável. Tente de novo em instantes.');
     limparSessao();renderAuth(e.status===401?'Sua sessão expirou. Entre novamente.':e.message);
   }
 }
-window.addEventListener('DOMContentLoaded',boot);
+// o script fica no fim do corpo: não precisa esperar nenhum evento (e nada externo trava a abertura)
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 </script>
 </body>
 </html>
