@@ -698,7 +698,7 @@ acoes.recarregar=()=>irTab(S.tab);
 /* =====================================================================
    CLIENTE
    ===================================================================== */
-const MEMBRO_TABS=[['cart','Carteirinha','card'],['parceiros','Parceiros','store'],['pagtos','Pagamentos','dollar'],['hist','Histórico','clock'],['conta','Conta','user']];
+const MEMBRO_TABS=[['cart','Carteirinha','card'],['parceiros','Parceiros','store'],['pontos','Pontos','tag'],['pagtos','Pagamentos','dollar'],['hist','Histórico','clock'],['conta','Conta','user']];
 function renderMembro(){
   $('#app').innerHTML=`<div class="app"><header class="top">${marca()}<div class="grow"></div><button type="button" class="ib" data-act="tema" aria-label="Alternar tema">${ic('sun')}</button></header><main class="view" id="view"></main></div>
   <nav class="tabbar"><div class="tabbar-in">${MEMBRO_TABS.map(([k,t,i])=>`<button type="button" class="tab" data-act="tab" data-t="${k}">${ic(i)}<span>${t}</span></button>`).join('')}</div></nav>`;
@@ -1221,19 +1221,102 @@ function abrirDetalheParceiro(id){
 acoes.parceiro=el=>abrirDetalheParceiro(el.dataset.id);
 acoes['ir-cart']=()=>{fecharSheet();irTab('cart')};
 
+/* --- pontos (programa de fidelidade estilo iFood: ganha usando benefício, troca por recompensa) --- */
+tabsMembro.pontos=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r,g;
+  try{[r,g]=await Promise.all([tk('nvd_membro_recompensas'),tk('nvd_membro_meus_resgates')])}catch(e){return erroView(v,e)}
+  S.pontosCache={saldo:r.saldo,recompensas:r.recompensas,resgates:g.resgates};
+  pintarPontos();
+};
+function pintarPontos(){
+  const v=$('#view');if(!v||S.tab!=='pontos')return;
+  const d=S.pontosCache;if(!d)return;
+  const pendentes=d.resgates.filter(x=>x.status==='pendente');
+  v.innerHTML=`<div class="head"><h2>Meus pontos</h2></div>
+    <section class="card" style="text-align:center;margin-bottom:16px">
+      <p class="muted" style="margin-bottom:4px">Seu saldo</p>
+      <p style="font-size:2.4rem;font-weight:900;color:var(--goldtext)">${d.saldo}</p>
+      <p class="muted" style="font-size:.82rem">Você ganha pontos toda vez que usa um benefício num parceiro.</p>
+    </section>
+    ${pendentes.length?`<h3 style="margin-bottom:10px">Resgates pra retirar</h3>
+      <div class="list" style="margin-bottom:20px">${pendentes.map(g=>`<div class="row"><div class="grow"><b>${esc(g.titulo)}</b><small>${esc(g.parceiro)} · mostre o código no balcão</small><p style="font-size:1.4rem;font-weight:900;letter-spacing:.08em;margin-top:4px">${esc(fmtCod(g.codigo))}</p></div>
+        <button type="button" class="btn danger sm" data-act="resgate-cancelar" data-id="${esc(g.id)}">Cancelar</button></div>`).join('')}</div>`:''}
+    <h3 style="margin-bottom:10px">Trocar por recompensas</h3>
+    <div class="list" style="margin-bottom:20px">${d.recompensas.length?d.recompensas.map(r=>`<button type="button" class="row" data-act="recompensa" data-id="${esc(r.id)}" ${d.saldo<r.pontos_custo?'style="opacity:.55"':''}>
+        <div class="grow"><b>${esc(r.titulo)}</b><small>${esc(r.parceiro_nome)}${r.descricao?' · '+esc(r.descricao):''}</small></div>
+        <span class="chip">${r.pontos_custo} pts</span></button>`).join(''):vazio('tag','Nenhuma recompensa disponível ainda.')}</div>
+    ${d.resgates.length?`<h3 style="margin-bottom:10px">Histórico de resgates</h3>
+      <div class="list">${d.resgates.map(g=>`<div class="row"><div class="grow"><b>${esc(g.titulo)}</b><small>${esc(g.parceiro)} · ${esc(dth(g.criado_em))}</small></div>
+        <span class="pill ${g.status==='confirmado'?'ok':g.status==='cancelado'?'mut':'warn'}">${g.status==='confirmado'?'Retirado':g.status==='cancelado'?'Cancelado':'Pendente'}</span></div>`).join('')}</div>`:''}`;
+}
+acoes.recompensa=el=>{
+  const d=S.pontosCache,r=d.recompensas.find(x=>x.id===el.dataset.id);if(!r)return;
+  if(d.saldo<r.pontos_custo)return toast('Você ainda não tem pontos suficientes.','erro');
+  abrirSheet(`<h3 style="margin-bottom:6px">${esc(r.titulo)}</h3>
+    <p class="muted" style="margin-bottom:4px">${esc(r.parceiro_nome)}</p>
+    ${r.descricao?`<p style="margin-bottom:14px">${esc(r.descricao)}</p>`:''}
+    <p style="margin-bottom:18px">Vai custar <b style="color:var(--goldtext)">${r.pontos_custo} pontos</b> do seu saldo de ${d.saldo}.</p>
+    <button type="button" class="btn block" data-act="resgate-confirmar" data-id="${esc(r.id)}">Confirmar resgate</button>`,'Resgatar recompensa');
+};
+acoes['resgate-confirmar']=async el=>{
+  const r=await tk('nvd_membro_resgatar_recompensa',{p_recompensa_id:el.dataset.id});
+  abrirSheet(`<div style="text-align:center"><h3 style="margin-bottom:10px">Recompensa resgatada!</h3>
+    <p class="muted" style="margin-bottom:6px">Mostre este código no balcão do estabelecimento</p>
+    <p style="font-size:2.2rem;font-weight:900;letter-spacing:.1em;margin:14px 0">${esc(fmtCod(r.codigo))}</p>
+    <button type="button" class="btn block" data-act="fechar-sheet">Entendi</button></div>`,'Resgate confirmado');
+  tabsMembro.pontos();
+};
+acoes['fechar-sheet']=()=>fecharSheet();
+acoes['resgate-cancelar']=async el=>{
+  if(!confirm('Cancelar este resgate? Os pontos voltam pro seu saldo.'))return;
+  await tk('nvd_membro_cancelar_resgate',{p_resgate_id:el.dataset.id});
+  toast('Resgate cancelado, pontos devolvidos.','ok');
+  tabsMembro.pontos();
+};
+
 /* --- histórico --- */
+S.histCache=null;
 tabsMembro.hist=async()=>{
   const v=$('#view');v.innerHTML=skl();
   let h;try{h=await tk('nvd_membro_historico')}catch(e){return erroView(v,e)}
+  S.histCache=h;
+  pintarHistorico();
+};
+function pintarHistorico(){
+  const v=$('#view');if(!v||S.tab!=='hist')return;
+  const h=S.histCache;if(!h)return;
   v.innerHTML=`<div class="head"><h2>Meus usos</h2></div>
-    <div class="list">${h.usos.length?h.usos.map(u=>`<div class="row"><div class="grow"><b>${esc(u.parceiro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}</small>${u.conta_centavos!=null?`<small>Conta ${brl(u.conta_centavos)} · desconto <b style="display:inline;color:var(--green)">${brl(u.desconto_centavos)}</b> · você pagou <b style="display:inline">${brl(u.pagar_centavos)}</b></small>`:''}</div>${u.estornado?'<span class="pill mut">Estornado</span>':''}</div>`).join(''):vazio('clock','Você ainda não usou nenhum benefício.')}</div>`;
+    <div class="list">${h.usos.length?h.usos.map(u=>`<div class="row" style="align-items:flex-start"><div class="grow"><b>${esc(u.parceiro)}</b><small>${esc(u.beneficio)} · ${esc(dth(u.quando))}</small>${u.conta_centavos!=null?`<small>Conta ${brl(u.conta_centavos)} · desconto <b style="display:inline;color:var(--green)">${brl(u.desconto_centavos)}</b> · você pagou <b style="display:inline">${brl(u.pagar_centavos)}</b></small>`:''}
+      ${u.avaliacao_nota?`<small style="color:var(--gold2)">${'★'.repeat(u.avaliacao_nota)}${'☆'.repeat(5-u.avaliacao_nota)} você avaliou</small>`:''}</div>
+      ${u.estornado?'<span class="pill mut">Estornado</span>':u.pode_avaliar?`<button type="button" class="btn sec sm" data-act="avaliar" data-id="${esc(u.id)}" data-p="${esc(u.parceiro)}">${ic('tag')} Avaliar</button>`:''}</div>`).join(''):vazio('clock','Você ainda não usou nenhum benefício.')}</div>`;
+}
+let _notaSel=0;
+acoes.avaliar=el=>{
+  _notaSel=0;
+  abrirSheet(`<form data-form="avaliar-salvar" data-uso="${esc(el.dataset.id)}" class="stack">
+    <h3 style="margin-bottom:2px">Como foi em ${esc(el.dataset.p)}?</h3>
+    <div id="estrelas" style="display:flex;gap:8px;font-size:2rem;margin:10px 0;cursor:pointer;user-select:none">${[1,2,3,4,5].map(n=>`<span data-act="estrela" data-n="${n}" style="color:var(--border2)">★</span>`).join('')}</div>
+    ${fld('avCom','Comentário (opcional)','',{area:1,max:500,ph:'Conte como foi sua experiência'})}
+    <button class="btn block" type="submit">Enviar avaliação</button>
+  </form>`,'Avaliar');
+};
+acoes.estrela=el=>{
+  _notaSel=Number(el.dataset.n);
+  $$('#estrelas span').forEach(s=>{s.style.color=Number(s.dataset.n)<=_notaSel?'var(--gold2)':'var(--border2)'});
+};
+forms['avaliar-salvar']=async f=>{
+  if(!_notaSel)return toast('Toque nas estrelas pra dar uma nota.','erro');
+  await tk('nvd_membro_avaliar',{p_uso_id:f.dataset.uso,p_nota:_notaSel,p_comentario:val('avCom')});
+  fecharSheet();toast('Obrigado pela avaliação!','ok');
+  tabsMembro.hist();
 };
 tabsMembro.conta=()=>{$('#view').innerHTML=viewConta()};
 
 /* =====================================================================
    PARCEIRO (atendente do restaurante ou empresa): confere a carteirinha e registra o uso
    ===================================================================== */
-const PARC_TABS=[['val','Validar','scan'],['usos','Usos','list'],['desc','Descontos','tag'],['conta','Conta','user']];
+const PARC_TABS=[['val','Validar','scan'],['usos','Usos','list'],['desc','Descontos','tag'],['resg','Resgates','tag'],['conta','Conta','user']];
 const tabsParceiro={};
 function renderParceiro(){
   $('#app').innerHTML=`<div class="app"><header class="top">${marca(S.parceiro?S.parceiro.nome:'')}<div class="grow"></div><button type="button" class="ib" data-act="tema" aria-label="Alternar tema">${ic('sun')}</button></header><main class="view" id="view"></main></div>
@@ -1492,10 +1575,35 @@ acoes['dc-pausar']=async el=>{
 tabsParceiro.conta=()=>{
   $('#view').innerHTML=viewConta(`<section class="card"><h3>Estabelecimento</h3><p><b>${esc(S.parceiro?S.parceiro.nome:'—')}</b></p><p class="muted">${esc(S.parceiro?S.parceiro.categoria:'')}</p></section>`);
 };
+
+/* --- resgates de recompensas (pontos) no balcão --- */
+tabsParceiro.resg=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r;try{r=await tk('nvd_parceiro_recompensas')}catch(e){return erroView(v,e)}
+  if(S.tab!=='resg')return;
+  v.innerHTML=`<div class="head"><h2>Resgates</h2></div>
+    <section class="card" style="margin-bottom:16px">
+      <h3 style="margin-bottom:10px">Confirmar código</h3>
+      <p class="muted" style="margin-bottom:12px">Peça pro cliente mostrar o código do resgate na tela dele.</p>
+      <form data-form="resg-confirmar" class="stack">
+        ${fld('rgCod','Código',(r.pendentes[0]&&r.pendentes[0].codigo)||'',{ph:'K7M2-Q9X4',max:20,auto:'off',extra:'autocapitalize="characters" autocorrect="off" spellcheck="false"'})}
+        <button class="btn block" type="submit">Confirmar</button>
+      </form>
+    </section>
+    ${r.pendentes.length?`<h3 style="margin-bottom:10px">Aguardando retirada</h3><div class="list" style="margin-bottom:20px">${r.pendentes.map(g=>`<button type="button" class="row" data-act="resg-preencher" data-cod="${esc(g.codigo)}"><div class="grow"><b>${esc(g.titulo)}</b><small>${esc(g.membro)} · ${esc(fmtCod(g.codigo))}</small></div>${ic('chevron')}</button>`).join('')}</div>`:''}
+    <h3 style="margin-bottom:10px">Suas recompensas cadastradas</h3>
+    <div class="list">${r.recompensas.length?r.recompensas.map(rc=>`<div class="row"><div class="grow"><b>${esc(rc.titulo)}</b>${rc.descricao?`<small>${esc(rc.descricao)}</small>`:''}</div><span class="chip">${rc.pontos_custo} pts</span>${rc.ativo?'':'<span class="pill mut">Inativa</span>'}</div>`).join(''):vazio('tag','Nenhuma recompensa cadastrada. Fale com a administração pra criar uma.')}</div>`;
+};
+acoes['resg-preencher']=el=>{const i=$('#rgCod');if(i)i.value=el.dataset.cod};
+forms['resg-confirmar']=async f=>{
+  const r=await tk('nvd_parceiro_confirmar_resgate',{p_codigo:val('rgCod')});
+  toast(`Resgate confirmado: ${r.titulo} — ${r.membro}`,'ok');
+  tabsParceiro.resg();
+};
 /* =====================================================================
    ADMIN: pagamentos (Pix manual), membros, parceiros, planos, acessos
    ===================================================================== */
-const ADMIN_TABS=[['painel','Painel','grid'],['pagtos','Pagamentos','dollar'],['comps','Comprovantes','paperclip'],['aprov','Aprovações','check'],['membros','Membros','users'],['parceiros','Parceiros','store'],['planos','Planos','tag'],['usos','Usos','list'],['acessos','Acessos','shield'],['config','Config','sliders'],['conta','Conta','user']];
+const ADMIN_TABS=[['painel','Painel','grid'],['pagtos','Pagamentos','dollar'],['comps','Comprovantes','paperclip'],['aprov','Aprovações','check'],['membros','Membros','users'],['parceiros','Parceiros','store'],['recomp','Recompensas','tag'],['planos','Planos','tag'],['usos','Usos','list'],['acessos','Acessos','shield'],['config','Config','sliders'],['conta','Conta','user']];
 const tabsAdmin={};
 const METODOS={pix_manual:'Pix manual',pix:'Pix',cartao:'Cartão',boleto:'Boleto',cortesia:'Cortesia'};
 const CATS=['Restaurante','Bar','Pizzaria','Hamburgueria','Cafeteria','Padaria','Sorveteria','Japonês','Churrascaria','Doceria','Academia','Estética','Saúde','Lazer','Serviços','Outros'];
@@ -2075,13 +2183,67 @@ tabsAdmin.config=async()=>{
       ${fld('cfFav','Nome do favorecido',r.pix_favorecido||'',{max:80,hint:'Como aparece no app do banco, para o cliente conferir.'})}
       ${fld('cfInstr','Instruções de pagamento',r.pix_instrucoes||'',{area:1,max:400})}
       ${fld('cfZap','WhatsApp de suporte',r.whatsapp||'',{mode:'numeric',max:20,ph:'5511999999999',hint:'Só números, com 55 + DDD. Aparece como botão de suporte e de envio de comprovante.'})}
+      <button class="btn block" type="submit">Salvar</button></form></section>
+    <section class="card" style="margin-top:16px"><h2>Programa de pontos</h2><p class="muted" style="margin-bottom:14px">Define quantos pontos o cliente ganha a cada uso de benefício confirmado.</p>
+    <form data-form="config-pontos" class="stack">
+      ${fld('cfPtReal','Pontos por R$1 da conta',r.pontos_por_real||'1',{mode:'decimal',hint:'Usado quando o atendente informa o valor da conta ao confirmar o uso.'})}
+      ${fld('cfPtPadrao','Pontos quando o valor não é informado',r.pontos_padrao||'10',{mode:'decimal'})}
       <button class="btn block" type="submit">Salvar</button></form></section>`;
 };
 forms.config=async()=>{
   await tk('nvd_admin_config_salvar',{p_dados:{nome_app:val('cfNome'),pix_chave:val('cfPix'),pix_favorecido:val('cfFav'),pix_instrucoes:val('cfInstr'),whatsapp:val('cfZap')}});
   toast('Configurações salvas.','ok');
 };
+forms['config-pontos']=async()=>{
+  await tk('nvd_admin_config_salvar',{p_dados:{pontos_por_real:val('cfPtReal'),pontos_padrao:val('cfPtPadrao')}});
+  toast('Configurações de pontos salvas.','ok');
+};
 tabsAdmin.conta=()=>{$('#view').innerHTML=viewConta()};
+
+/* --- recompensas (admin) + moderação de avaliações --- */
+tabsAdmin.recomp=async()=>{
+  const v=$('#view');v.innerHTML=skl();
+  let r,a,pr;try{[r,a,pr]=await Promise.all([tk('nvd_admin_recompensas'),tk('nvd_admin_avaliacoes'),tk('nvd_admin_parceiros')])}catch(e){return erroView(v,e)}
+  S.recompAdm=r.recompensas;S.avalAdm=a.avaliacoes;S.parceirosParaRecomp=pr.parceiros;
+  desenharRecompAdm();
+};
+function desenharRecompAdm(){
+  const v=$('#view');if(!v||S.tab!=='recomp')return;
+  v.innerHTML=`<div class="head"><h2>Recompensas</h2><div class="grow"></div><button type="button" class="btn sm" data-act="recomp-novo">${ic('plus')} Nova</button></div>
+    <div class="list" style="margin-bottom:24px">${S.recompAdm.length?S.recompAdm.map(r=>`<button type="button" class="row" data-act="recomp-editar" data-id="${esc(r.id)}"><div class="grow"><b>${esc(r.titulo)}</b><small>${esc(r.parceiro_nome)} · ${r.pontos_custo} pts${r.resgates_pendentes?` · ${r.resgates_pendentes} pra retirar`:''}${r.resgates_total?` · ${r.resgates_total} retirado(s)`:''}</small></div>${r.ativo?'':'<span class="pill mut">Inativa</span>'}${ic('chevron')}</button>`).join(''):vazio('tag','Nenhuma recompensa cadastrada ainda.')}</div>
+    <h3 style="margin-bottom:10px">Avaliações recentes</h3>
+    <div class="list">${S.avalAdm.length?S.avalAdm.slice(0,40).map(a=>`<div class="row" style="align-items:flex-start"><div class="grow"><b>${'★'.repeat(a.nota)}${'☆'.repeat(5-a.nota)}</b><small>${esc(a.parceiro_nome)} · ${esc(a.membro)} · ${esc(dth(a.quando))}</small>${a.comentario?`<p style="margin-top:4px">${esc(a.comentario)}</p>`:''}</div><button type="button" class="btn danger sm" data-act="aval-excluir" data-id="${esc(a.id)}">${ic('trash')}</button></div>`).join(''):vazio('tag','Nenhuma avaliação ainda.')}</div>`;
+}
+function sheetRecomp(r){
+  r=r||{};
+  abrirSheet(`<form data-form="recomp-salvar" data-id="${esc(r.id||'')}" class="stack">
+    ${sel('rcParceiro','Estabelecimento',S.parceirosParaRecomp.map(p=>[p.id,p.nome]),r.parceiro_id||(S.parceirosParaRecomp[0]&&S.parceirosParaRecomp[0].id))}
+    ${fld('rcTitulo','Recompensa',r.titulo||'',{max:120,ph:'Ex.: Sobremesa grátis'})}
+    ${fld('rcDesc','Descrição (opcional)',r.descricao||'',{area:1,max:500})}
+    ${fld('rcCusto','Custo em pontos',String(r.pontos_custo||''),{mode:'numeric',ph:'Ex.: 500'})}
+    ${sel('rcAtivo','Situação',[['true','Ativa'],['false','Inativa']],r.ativo===false?'false':'true')}
+    <button class="btn block" type="submit">Salvar</button>
+    ${r.id?`<button type="button" class="btn danger block" data-act="recomp-excluir" data-id="${esc(r.id)}">${ic('trash')} Excluir</button>`:''}
+  </form>`,r.id?'Editar recompensa':'Nova recompensa');
+}
+acoes['recomp-novo']=()=>sheetRecomp(null);
+acoes['recomp-editar']=el=>sheetRecomp(S.recompAdm.find(x=>x.id===el.dataset.id));
+forms['recomp-salvar']=async f=>{
+  const custo=parseInt(val('rcCusto'),10);
+  if(!custo||custo<=0)return toast('Informe o custo em pontos.','erro');
+  await tk('nvd_admin_recompensa_salvar',{p_id:f.dataset.id||null,p_parceiro_id:val('rcParceiro'),p_dados:{titulo:val('rcTitulo'),descricao:val('rcDesc'),pontos_custo:custo,ativo:val('rcAtivo')==='true'}});
+  fecharSheet();toast('Recompensa salva.','ok');tabsAdmin.recomp();
+};
+acoes['recomp-excluir']=async el=>{
+  if(!confirm('Excluir esta recompensa?'))return;
+  const r=await tk('nvd_admin_recompensa_excluir',{p_id:el.dataset.id});
+  fecharSheet();toast(r.desativado?'Recompensa desativada (já tem resgate no histórico).':'Recompensa excluída.','ok');tabsAdmin.recomp();
+};
+acoes['aval-excluir']=async el=>{
+  if(!confirm('Excluir esta avaliação?'))return;
+  await tk('nvd_admin_avaliacao_excluir',{p_id:el.dataset.id});
+  toast('Avaliação excluída.','ok');tabsAdmin.recomp();
+};
 
 /* ---------- inicialização ---------- */
 // o app guarda uma cópia de si mesmo; quando há versão nova, avisa e o usuário escolhe o momento de atualizar
