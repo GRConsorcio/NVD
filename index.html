@@ -55,6 +55,11 @@ body[data-role=admin] .app{max-width:1080px;padding-bottom:48px}
 .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--gold2),var(--gold));display:grid;place-items:center;color:var(--on-gold);font-weight:900;font-size:.95rem}
 .ib{background:var(--s2);color:var(--text);border:1px solid var(--border);width:40px;height:40px;border-radius:12px;display:inline-grid;place-items:center;flex:none}
 .ib:hover{border-color:var(--border2)}
+.ib.fav{width:34px;height:34px;cursor:pointer}
+.ib.fav .ic{transition:transform .15s}
+.ib.fav.on{color:var(--red);border-color:rgba(255,100,115,.35);background:rgba(255,100,115,.1)}
+.ib.fav.on .ic{fill:currentColor}
+.ib.fav:active .ic{transform:scale(.85)}
 .view{padding:16px}
 .card{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:14px}
 .card h2{font-size:1.15rem;margin-bottom:4px}
@@ -327,6 +332,7 @@ button.row:hover{border-color:var(--border2)}
 <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
 <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
 <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+<symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
 </defs></svg>
 
 <div id="app"></div>
@@ -759,7 +765,7 @@ async function carregarCart(){
 const cartAtiva=c=>!!(c&&!c.bloqueado&&c.valido_ate&&new Date(c.valido_ate).getTime()>Date.now()+c.offsetMs);
 // abre na hora com a carteirinha guardada no aparelho (o QR é calculado aqui, sem depender do servidor) e atualiza em segundo plano:
 // rede fraca não deixa a tela vazia nem o cliente esperando pra mostrar o código
-const assinaturaCart=c=>c?[c.codigo,c.qr_secret,c.valido_ate,c.bloqueado,c.nome,c.pendente&&c.pendente.id,c.pendente&&c.pendente.informado_em].join('|'):'';
+const assinaturaCart=c=>c?[c.codigo,c.qr_secret,c.valido_ate,c.bloqueado,c.nome,c.pendente&&c.pendente.id,c.pendente&&c.pendente.informado_em,c.total_usos].join('|'):'';
 tabsMembro.cart=async()=>{
   const v=$('#view');
   if(!S.cart){try{S.cart=JSON.parse(store.get('nvd.cart')||'null')}catch(e){}}
@@ -789,6 +795,7 @@ function desenharCart(){
       ${c.bloqueado?'':`<button type="button" class="btn" data-act="planos">Ativar carteirinha</button>`}</div>`}
     <div class="w-foot">${ativa?`Válida até <b>${esc(dt(c.valido_ate))}</b>`:c.valido_ate?`Venceu em <b>${esc(dt(c.valido_ate))}</b>`:''}</div>
   </section>
+  ${ativa&&c.total_usos?`<section class="card" style="text-align:center"><small style="color:var(--muted2)">Você já economizou</small><div style="font-size:1.6rem;font-weight:800;color:var(--green)">${brl(c.total_economizado_centavos)}</div><small style="color:var(--muted2)">em ${c.total_usos} uso${c.total_usos>1?'s':''} do NVD CARD</small></section>`:''}
   ${ativa?`<section class="card"><h3>Como usar</h3><ol class="steps"><li>Escolha um parceiro na aba <b>Parceiros</b>.</li><li>Antes de pedir a conta, abra esta tela e mostre o QR code ao atendente.</li><li>Ele confirma o benefício na hora. Sem cupom nem papel.</li></ol></section>`
   :(!c.bloqueado&&c.valido_ate?`<button type="button" class="btn block" data-act="planos">Renovar carteirinha</button>`:'')}`;
   if(ativa)iniciarQr();
@@ -1050,7 +1057,7 @@ acoes['comp-enviar']=async el=>{
 };
 
 /* --- parceiros --- */
-S.pf={q:'',cat:'',view:'lista'};
+S.pf={q:'',cat:'',view:'lista',fav:false};
 S.geo=null; // null=ainda não pediu, 'negado'=usuário recusou/indisponível, {lat,lon}=ok
 // mostra a última lista guardada na hora e atualiza em segundo plano
 tabsMembro.parceiros=async()=>{
@@ -1073,7 +1080,7 @@ function pintarParceiros(){
       <button type="button" class="${S.pf.view==='mapa'?'on':''}" data-act="pview" data-v="mapa">${ic('map')} Mapa</button>
     </div>
     <div class="field" style="margin-bottom:12px"><input id="pq" type="search" placeholder="Buscar restaurante, categoria ou cidade" value="${esc(S.pf.q)}" aria-label="Buscar parceiros"></div>
-    <div class="fchips" id="pcats"><button type="button" class="fchip ${S.pf.cat?'':'on'}" data-act="cat" data-v="">Todos</button>${cats.map(c=>`<button type="button" class="fchip ${S.pf.cat===c?'on':''}" data-act="cat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+    <div class="fchips" id="pcats"><button type="button" class="fchip ${S.pf.cat?'':'on'}" data-act="cat" data-v="">Todos</button><button type="button" class="fchip ${S.pf.fav?'on':''}" data-act="favfiltro">${ic('heart')} Favoritos</button>${cats.map(c=>`<button type="button" class="fchip ${S.pf.cat===c?'on':''}" data-act="cat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}</div>
     <div id="pview-lista" style="${S.pf.view==='mapa'?'display:none':''}"><div class="list" id="plist"></div></div>
     <div id="pview-mapa" style="${S.pf.view==='mapa'?'':'display:none'}">
       <div id="pgeo-banner"></div>
@@ -1085,7 +1092,7 @@ function pintarParceiros(){
 }
 function parceirosFiltrados(){
   const q=S.pf.q.trim().toLowerCase();
-  return S.parceiros.filter(p=>(!S.pf.cat||p.categoria===S.pf.cat)&&(!q||[p.nome,p.categoria,p.cidade,p.endereco].join(' ').toLowerCase().includes(q)));
+  return S.parceiros.filter(p=>(!S.pf.cat||p.categoria===S.pf.cat)&&(!S.pf.fav||p.favorito)&&(!q||[p.nome,p.categoria,p.cidade,p.endereco].join(' ').toLowerCase().includes(q)));
 }
 function listaParceiros(){
   const L=$('#plist');if(!L)return;
@@ -1094,11 +1101,20 @@ function listaParceiros(){
     <div class="logo">${lg?`<img src="${esc(lg)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:esc(ini(p.nome))}</div>
     <div class="grow"><b>${esc(p.nome)}</b><small>${esc(p.categoria)}${p.cidade?' · '+esc(p.cidade):''}${d!=null?` · <span style="color:var(--blue)">${fmtDist(d)}</span>`:''}</small>
       ${p.avaliacao_total?`<small>★ ${p.avaliacao_media} (${p.avaliacao_total})</small>`:''}
-      <div class="chips">${p.beneficios.slice(0,3).map(b=>`<span class="chip">${esc(resumoBenef(b))}</span>`).join('')}</div></div>${ic('chevron')}</button>`}).join('')
+      <div class="chips">${p.beneficios.slice(0,3).map(b=>`<span class="chip">${esc(resumoBenef(b))}</span>`).join('')}</div></div>
+      <span class="ib fav ${p.favorito?'on':''}" data-act="favorito" data-id="${esc(p.id)}" role="button" tabindex="0" aria-label="Favoritar">${ic('heart')}</span></button>`}).join('')
     :vazio('search',S.parceiros.length?'Nenhum parceiro encontrado com esse filtro.':'Em breve novos parceiros por aqui.');
 }
 document.addEventListener('input',e=>{if(e.target.id==='pq'){S.pf.q=e.target.value;listaParceiros();if(S.pf.view==='mapa')mostrarMapaParceiros()}});
 acoes.cat=el=>{S.pf.cat=el.dataset.v;$$('#pcats .fchip').forEach(b=>b.classList.toggle('on',b===el));listaParceiros();if(S.pf.view==='mapa')mostrarMapaParceiros()};
+acoes.favfiltro=el=>{S.pf.fav=!S.pf.fav;el.classList.toggle('on',S.pf.fav);listaParceiros();if(S.pf.view==='mapa')mostrarMapaParceiros()};
+acoes.favorito=async(el,ev)=>{
+  if(ev)ev.stopPropagation();
+  const id=el.dataset.id,p=S.parceiros.find(x=>x.id===id);if(!p)return;
+  const antes=p.favorito;p.favorito=!antes;el.classList.toggle('on',p.favorito); // otimista: reage na hora, sem esperar o servidor
+  try{await tk('nvd_membro_favorito_toggle',{p_parceiro_id:id});store.set('nvd.parceiros',JSON.stringify(S.parceiros));if(S.pf.fav)listaParceiros()}
+  catch(e){p.favorito=antes;el.classList.toggle('on',p.favorito);toast('Não foi possível favoritar agora.','err')}
+};
 acoes.pview=el=>{
   S.pf.view=el.dataset.v;
   $$('.seg2 button[data-act=pview]').forEach(b=>b.classList.toggle('on',b===el));
