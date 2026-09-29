@@ -349,7 +349,7 @@ button.row:hover{border-color:var(--border2)}
    ===================================================================== */
 const SB_URL='https://defwtvwmxntoliuwzjnf.supabase.co';
 const SB_KEY='sb_publishable_QukddDQPhm3R3XaUlxIY6w_7qleuNL8';
-const VERSAO='1.3.0';
+const VERSAO='1.3.1';
 const TZ='America/Sao_Paulo';
 
 /* ---------- utilitários ---------- */
@@ -1069,13 +1069,19 @@ tabsMembro.parceiros=async()=>{
     const token=S.token,r=(await tk('nvd_membro_parceiros')).parceiros,mudou=JSON.stringify(r)!==JSON.stringify(cache);
     if(S.token!==token)return;
     S.parceiros=r;store.set('nvd.parceiros',JSON.stringify(r));
-    if(mudou||!cache)pintarParceiros();
-  }catch(e){if(!cache)return erroView(v,e)}
+    const eraVelha=S.parcVelha;S.parcVelha=false;
+    if(mudou||!cache||eraVelha)pintarParceiros();
+  }catch(e){
+    if(!cache)return erroView(v,e);
+    // já mostramos a lista guardada; avisa que ela pode estar velha em vez de falhar em silêncio
+    S.parcVelha=true;pintarParceiros();
+  }
 };
+acoes['parc-recarregar']=()=>{S.parcVelha=false;pintarParceiros();tabsMembro.parceiros()};
 function pintarParceiros(){
   const v=$('#view');if(!v||S.tab!=='parceiros')return;
   const cats=[...new Set(S.parceiros.map(p=>p.categoria))].sort();
-  v.innerHTML=`<div class="seg2" role="tablist">
+  v.innerHTML=`${S.parcVelha?`<button type="button" class="banner warn" data-act="parc-recarregar">${ic('alert')}<span>Não deu pra atualizar a lista de parceiros. Toque pra tentar de novo.</span></button>`:''}<div class="seg2" role="tablist">
       <button type="button" class="${S.pf.view==='lista'?'on':''}" data-act="pview" data-v="lista">${ic('list')} Lista</button>
       <button type="button" class="${S.pf.view==='mapa'?'on':''}" data-act="pview" data-v="mapa">${ic('map')} Mapa</button>
     </div>
@@ -1113,7 +1119,7 @@ acoes.favorito=async(el,ev)=>{
   const id=el.dataset.id,p=S.parceiros.find(x=>x.id===id);if(!p)return;
   const antes=p.favorito;p.favorito=!antes;el.classList.toggle('on',p.favorito); // otimista: reage na hora, sem esperar o servidor
   try{await tk('nvd_membro_favorito_toggle',{p_parceiro_id:id});store.set('nvd.parceiros',JSON.stringify(S.parceiros));if(S.pf.fav)listaParceiros()}
-  catch(e){p.favorito=antes;el.classList.toggle('on',p.favorito);toast('Não foi possível favoritar agora.','err')}
+  catch(e){p.favorito=antes;el.classList.toggle('on',p.favorito);toast('Não foi possível favoritar agora.','erro')}
 };
 acoes.pview=el=>{
   S.pf.view=el.dataset.v;

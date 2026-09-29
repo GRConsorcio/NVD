@@ -2,7 +2,7 @@
 // Estratégia "guarda e atualiza": responde com o que está guardado (instantâneo) e busca a versão nova por trás.
 // Se o index.html mudou, avisa a página, que mostra "Nova versão disponível" e deixa o usuário escolher quando atualizar.
 // Só GET passa por aqui: as chamadas ao Supabase são POST e vão direto pra rede (nunca guardamos dado de cliente).
-const CACHE = 'nvd-card-v6';
+const CACHE = 'nvd-card-v7';
 const SHELL = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './apple-touch-icon.png'];
 const JSQR = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'; // leitor de QR de reserva (versão fixa, nunca muda)
 const PAGINA = './index.html';
