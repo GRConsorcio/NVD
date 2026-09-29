@@ -349,7 +349,7 @@ button.row:hover{border-color:var(--border2)}
    ===================================================================== */
 const SB_URL='https://defwtvwmxntoliuwzjnf.supabase.co';
 const SB_KEY='sb_publishable_QukddDQPhm3R3XaUlxIY6w_7qleuNL8';
-const VERSAO='1.3.1';
+const VERSAO='1.3.2';
 const TZ='America/Sao_Paulo';
 
 /* ---------- utilitários ---------- */
@@ -1096,9 +1096,19 @@ function pintarParceiros(){
   listaParceiros();
   if(S.pf.view==='mapa')mostrarMapaParceiros();
 }
+// busca tolerante: ignora acento e maiúscula, aceita plural ("restaurantes" acha "Restaurante")
+// e exige que TODAS as palavras digitadas apareçam (nome, categoria, cidade, endereço ou benefício)
+const semAcento=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const raizBusca=w=>w.length>3?w.replace(/(es|s)$/,''):w;
 function parceirosFiltrados(){
-  const q=S.pf.q.trim().toLowerCase();
-  return S.parceiros.filter(p=>(!S.pf.cat||p.categoria===S.pf.cat)&&(!S.pf.fav||p.favorito)&&(!q||[p.nome,p.categoria,p.cidade,p.endereco].join(' ').toLowerCase().includes(q)));
+  const palavras=semAcento(S.pf.q).split(/\s+/).filter(Boolean).map(raizBusca);
+  return S.parceiros.filter(p=>{
+    if(S.pf.cat&&p.categoria!==S.pf.cat)return false;
+    if(S.pf.fav&&!p.favorito)return false;
+    if(!palavras.length)return true;
+    const alvo=semAcento([p.nome,p.categoria,p.cidade,p.endereco,p.descricao,...(p.beneficios||[]).map(b=>b.titulo)].join(' '));
+    return palavras.every(w=>alvo.includes(w));
+  });
 }
 function listaParceiros(){
   const L=$('#plist');if(!L)return;
