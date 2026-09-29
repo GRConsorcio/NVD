@@ -349,7 +349,7 @@ button.row:hover{border-color:var(--border2)}
    ===================================================================== */
 const SB_URL='https://defwtvwmxntoliuwzjnf.supabase.co';
 const SB_KEY='sb_publishable_QukddDQPhm3R3XaUlxIY6w_7qleuNL8';
-const VERSAO='1.3.2';
+const VERSAO='1.3.4';
 const TZ='America/Sao_Paulo';
 
 /* ---------- utilitários ---------- */
@@ -2071,11 +2071,13 @@ function sheetParceiro(p){
     ${fld('prNome','Nome',p.nome||'',{max:80})}
     ${fld('prCat','Categoria',p.categoria||'Restaurante',{max:40,list:'catsList'})}<datalist id="catsList">${CATS.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
     ${fld('prDesc','Descrição',p.descricao||'',{area:1,max:600,ph:'O que o cliente precisa saber sobre o lugar'})}
+    ${fld('prCep','CEP (preenche endereço e cidade)','',{mode:'numeric',max:9,ph:'00000-000',auto:'off',hint:'<span id="prCepMsg">Digite o CEP e o endereço vem sozinho. Depois é só completar o número.</span>'})}
     <div class="grid2">${fld('prEnd','Endereço',p.endereco||'',{max:200})}${fld('prCid','Cidade',p.cidade||'',{max:80})}</div>
     <div class="grid2">${fld('prTel','Telefone',p.telefone||'',{type:'tel',max:30})}${fld('prIg','Instagram (sem @)',p.instagram||'',{max:40})}</div>
     ${fld('prLogo','Link do logo (opcional)',p.logo_url||'',{type:'url',max:500,ph:'https://…',hint:'Cole o endereço de uma imagem já publicada.'})}
-    <div class="grid2">${fld('prLat','Latitude (mapa)',p.latitude!=null?String(p.latitude):'',{mode:'decimal',ph:'-19.9167'})}${fld('prLon','Longitude (mapa)',p.longitude!=null?String(p.longitude):'',{mode:'decimal',ph:'-43.9345'})}</div>
-    <p class="muted" style="font-size:.82rem;margin-top:-8px">Pra aparecer no mapa do cliente: abra o Google Maps, clique com o botão direito no local exato e copie as duas coordenadas (a primeira é a latitude, a segunda a longitude).</p>
+    <div class="stack" style="gap:6px"><button type="button" class="btn sec block" data-act="parc-localizar">${ic('pin')} Localizar no mapa pelo endereço</button>
+    <p class="muted" id="prGeoMsg" style="font-size:.82rem">${p.latitude!=null?'Localização já definida.':'A localização é achada sozinha a partir do endereço (também ao salvar). Pra aparecer no mapa do cliente ela precisa existir.'}</p></div>
+    <details><summary class="muted" style="font-size:.82rem;cursor:pointer">Ajustar coordenadas manualmente</summary><div class="grid2" style="margin-top:8px">${fld('prLat','Latitude',p.latitude!=null?String(p.latitude):'',{mode:'decimal',ph:'-19.9167'})}${fld('prLon','Longitude',p.longitude!=null?String(p.longitude):'',{mode:'decimal',ph:'-43.9345'})}</div></details>
     ${sel('prAtivo','Situação',[['true','Ativo (aparece para os clientes)'],['false','Inativo']],p.ativo===false?'false':'true')}
     <button class="btn block" type="submit">${p.id?'Salvar alterações':'Cadastrar estabelecimento'}</button>
   </form>
@@ -2085,9 +2087,70 @@ function sheetParceiro(p){
     <h3 style="margin:24px 0 6px">Acesso do atendente</h3><p class="muted" style="font-size:.86rem">${p.usuarios} acesso(s) criado(s). Crie o login dos atendentes na aba <b>Acessos</b>.</p>
     <button type="button" class="btn danger block" style="margin-top:24px" data-act="parc-excluir" data-id="${esc(p.id)}" data-n="${esc(p.nome)}">${ic('trash')} Excluir estabelecimento</button>`:''}`,p.id?p.nome:'Novo estabelecimento');
 }
+// endereço → latitude/longitude (OpenStreetMap Nominatim, sem chave). Tenta do mais preciso ao mais geral:
+// rua com número, rua sem número, e por fim só o CEP. Devolve {lat,lon,preciso} ou null.
+async function geocodificar(endereco,cidade,cep){
+  const rua=String(endereco||'').replace(/\s+/g,' ').trim().replace(/[,\s-]+$/,'');
+  const semNum=rua.replace(/[,\s-]*\d+.*$/,'').trim();
+  const tentativas=[];
+  if(rua)tentativas.push({q:`${rua}, ${cidade||''}, Brasil`,preciso:/\d/.test(rua)});
+  if(semNum&&semNum!==rua)tentativas.push({q:`${semNum}, ${cidade||''}, Brasil`,preciso:false});
+  if(cep&&cep.length===8)tentativas.push({postalcode:cep.slice(0,5)+'-'+cep.slice(5),preciso:false});
+  for(const t of tentativas){
+    const u=new URL('https://nominatim.openstreetmap.org/search');
+    u.searchParams.set('format','jsonv2');u.searchParams.set('limit','1');u.searchParams.set('countrycodes','br');
+    if(t.q)u.searchParams.set('q',t.q);else{u.searchParams.set('postalcode',t.postalcode);u.searchParams.set('country','Brasil')}
+    const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),8000);
+    try{
+      const r=await fetch(u,{signal:ctl.signal,headers:{'Accept-Language':'pt-BR'}});
+      const j=r.ok?await r.json():[];
+      if(j[0]&&isFinite(+j[0].lat)&&isFinite(+j[0].lon))return {lat:(+j[0].lat).toFixed(6),lon:(+j[0].lon).toFixed(6),preciso:t.preciso};
+    }catch(e){}finally{clearTimeout(tm)}
+  }
+  return null;
+}
+acoes['parc-localizar']=async el=>{
+  const msg=$('#prGeoMsg'),cep=($('#prCep')?.value||'').replace(/\D/g,'');
+  if(!val('prEnd')&&cep.length<8){if(msg)msg.textContent='Preencha o endereço (ou o CEP) primeiro.';return}
+  el.disabled=true;if(msg)msg.textContent='Procurando no mapa…';
+  const g=await geocodificar(val('prEnd'),val('prCid'),cep);
+  el.disabled=false;
+  if(!g){if(msg)msg.textContent='Não achei esse endereço no mapa. Confira o número e a cidade, ou ajuste as coordenadas manualmente.';return}
+  $('#prLat').value=g.lat;$('#prLon').value=g.lon;
+  if(msg)msg.textContent=g.preciso?'Localização encontrada. Confira no mapa do cliente depois de salvar.':'Achei a rua, mas não o número exato: o pino pode ficar a alguns metros do local. Ajuste manualmente se precisar.';
+};
+// CEP → endereço e cidade (ViaCEP, gratuito e sem chave). O número fica pro admin digitar.
+let cepSeq=0;
+document.addEventListener('input',async e=>{
+  if(e.target.id!=='prCep')return;
+  const d=e.target.value.replace(/\D/g,'').slice(0,8);
+  e.target.value=d.length>5?d.slice(0,5)+'-'+d.slice(5):d;
+  const msg=$('#prCepMsg');if(d.length<8)return;
+  const seq=++cepSeq;
+  if(msg)msg.textContent='Buscando endereço…';
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),8000);
+  try{
+    const r=await fetch(`https://viacep.com.br/ws/${d}/json/`,{signal:ctl.signal});
+    const j=await r.json();
+    if(seq!==cepSeq||!$('#prCep'))return; // digitou outro CEP ou fechou a janela
+    if(!r.ok||j.erro){if(msg)msg.textContent='CEP não encontrado. Confira os números ou preencha à mão.';return}
+    const rua=[j.logradouro,j.bairro].filter(Boolean);
+    $('#prEnd').value=(j.logradouro?j.logradouro+', ':'').slice(0,200);
+    $('#prCid').value=(j.localidade||'').slice(0,80);
+    if(msg)msg.textContent=`${rua.join(' · ')||'CEP geral'}${j.localidade?' — '+j.localidade+'/'+j.uf:''}. Complete o número do endereço.`;
+    const en=$('#prEnd');en.focus();en.setSelectionRange(en.value.length,en.value.length);
+  }catch(err){
+    if(seq===cepSeq&&msg)msg.textContent='Não consegui buscar o CEP agora. Preencha o endereço à mão.';
+  }finally{clearTimeout(t)}
+});
 acoes['parc-novo']=()=>sheetParceiro(null);
 acoes['parc-edit']=el=>sheetParceiro(S.parceirosAdm.find(x=>x.id===el.dataset.id));
 forms['parc-salvar']=async f=>{
+  // sem coordenadas? tenta achar pelo endereço antes de salvar (se falhar, salva mesmo assim)
+  if((!val('prLat')||!val('prLon'))&&val('prEnd')){
+    const g=await geocodificar(val('prEnd'),val('prCid'),($('#prCep')?.value||'').replace(/\D/g,''));
+    if(g){$('#prLat').value=g.lat;$('#prLon').value=g.lon}
+  }
   const r=await tk('nvd_admin_parceiro_salvar',{p_id:f.dataset.id||null,p_dados:{nome:val('prNome'),categoria:val('prCat'),descricao:val('prDesc'),endereco:val('prEnd'),cidade:val('prCid'),telefone:val('prTel'),instagram:val('prIg'),logo_url:val('prLogo'),latitude:val('prLat'),longitude:val('prLon'),ativo:val('prAtivo')==='true'}});
   await carregarParceirosAdm();desenharParceirosAdm();toast('Salvo.','ok');
   // reabre já em modo edição: quem acabou de cadastrar o parceiro quer adicionar o benefício em seguida
